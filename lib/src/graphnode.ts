@@ -1,3 +1,5 @@
+import { IGraphEdge } from "./graphedge";
+
 export interface IGraphNode{
     visited:boolean;
     f:number;
@@ -5,6 +7,7 @@ export interface IGraphNode{
     h:number;
     closed:boolean;
     parent:IGraphNode;
+    adjacentEdges:IGraphEdge[];
 
     toString():string;
     getCost(fromNeighbor:IGraphNode):number;

@@ -1,7 +1,9 @@
 import { IGraphNode } from "./graphnode";
+import { IGraphEdge } from "./graphedge";
 
 export interface IGraph{
     nodes:IGraphNode[];
+    edges:IGraphEdge[];
     dirtyNodes:IGraphNode[];
 
     init():void;

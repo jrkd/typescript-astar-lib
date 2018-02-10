@@ -1,4 +1,6 @@
 import { IGraphNode } from "./graphnode";
+import { IGraphEdge } from "./graphedge";
+import { GridEdge } from "./gridedge";
 
 export class GridNode implements IGraphNode{
     x: number;
@@ -12,6 +14,7 @@ export class GridNode implements IGraphNode{
     h:number = 0;
     closed:boolean;
     parent:GridNode;
+    adjacentEdges:GridEdge[];
 
     constructor(x:number, y:number, weight:number) {
         this.x = x;
