@@ -1,22 +1,22 @@
 "use strict";
 exports.__esModule = true;
+// See list of heuristics: http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
+var heuristics = {
+    manhattan: function (pos0, pos1) {
+        var d1 = Math.abs(pos1.x - pos0.x);
+        var d2 = Math.abs(pos1.y - pos0.y);
+        return d1 + d2;
+    },
+    diagonal: function (pos0, pos1) {
+        var D = 1;
+        var D2 = Math.sqrt(2);
+        var d1 = Math.abs(pos1.x - pos0.x);
+        var d2 = Math.abs(pos1.y - pos0.y);
+        return (D * (d1 + d2)) + ((D2 - (2 * D)) * Math.min(d1, d2));
+    }
+};
 var AStar = /** @class */ (function () {
     function AStar() {
-        // See list of heuristics: http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
-        this.heuristics = {
-            manhattan: function (pos0, pos1) {
-                var d1 = Math.abs(pos1.x - pos0.x);
-                var d2 = Math.abs(pos1.y - pos0.y);
-                return d1 + d2;
-            },
-            diagonal: function (pos0, pos1) {
-                var D = 1;
-                var D2 = Math.sqrt(2);
-                var d1 = Math.abs(pos1.x - pos0.x);
-                var d2 = Math.abs(pos1.y - pos0.y);
-                return (D * (d1 + d2)) + ((D2 - (2 * D)) * Math.min(d1, d2));
-            }
-        };
     }
     /**
   * Perform an A* Search on a graph given a start and end node.
@@ -29,10 +29,10 @@ var AStar = /** @class */ (function () {
   * @param {Function} [options.heuristic] Heuristic function (see
   *          astar.heuristics).
   */
-    AStar.prototype.search = function (graph, start, end, options) {
+    AStar.search = function (graph, start, end, options) {
         graph.cleanDirty();
         options = options || {};
-        var heuristic = options.heuristic || this.heuristics.manhattan;
+        var heuristic = options.heuristic || heuristics.manhattan;
         var closest = options.closest || false;
         var openHeap = new BinaryHeap(function (node) { return node.f; });
         var closestNode = start; // set the start node to be the closest if required

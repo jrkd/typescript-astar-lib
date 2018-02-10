@@ -1,4 +1,4 @@
-class BinaryHeap<T> { 
+export class BinaryHeap<T> { 
     content:T[];
     scoreFunction:Function;
 

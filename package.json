@@ -14,7 +14,15 @@
     "url": "https://github.com/bgrins/javascript-astar/issues"
   },
   "homepage": "http://bgrins.github.io/javascript-astar",
+  "dependencies": {},
   "devDependencies": {
-    "typescript": "2.7.1"
+    "ts-loader": "^3.5.0",
+    "typescript": "^2.7.1",
+    "webpack": "^3.10.0",
+    "jquery": "3.3.1",
+    "@types/jquery": "3.3.0"
+  },
+  "scripts": {
+    "build": "webpack"
   }
 }

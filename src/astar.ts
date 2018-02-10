@@ -1,23 +1,26 @@
 import {GridNode} from "./gridnode";
 import {Graph} from "./graph";
+import {BinaryHeap} from "./binaryheap";
+
+// See list of heuristics: http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
+var heuristics = {
+    manhattan: function(pos0:GridNode, pos1:GridNode):number {
+        let d1:number = Math.abs(pos1.x - pos0.x);
+        let d2:number = Math.abs(pos1.y - pos0.y);
+        return d1 + d2; 
+    },
+    diagonal: function(pos0:GridNode, pos1:GridNode):number {
+        let D:number = 1;
+        let D2:number = Math.sqrt(2);
+        let d1:number = Math.abs(pos1.x - pos0.x);
+        let d2:number = Math.abs(pos1.y - pos0.y);
+        return (D * (d1 + d2)) + ((D2 - (2 * D)) * Math.min(d1, d2));
+    }
+};
 
 export class AStar{
 
-// See list of heuristics: http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
-    heuristics = {
-        manhattan: function(pos0:GridNode, pos1:GridNode):number {
-            let d1:number = Math.abs(pos1.x - pos0.x);
-            let d2:number = Math.abs(pos1.y - pos0.y);
-            return d1 + d2; 
-        },
-        diagonal: function(pos0:GridNode, pos1:GridNode):number {
-            let D:number = 1;
-            let D2:number = Math.sqrt(2);
-            let d1:number = Math.abs(pos1.x - pos0.x);
-            let d2:number = Math.abs(pos1.y - pos0.y);
-            return (D * (d1 + d2)) + ((D2 - (2 * D)) * Math.min(d1, d2));
-        }
-    };
+
 
     /**
   * Perform an A* Search on a graph given a start and end node.
@@ -30,10 +33,10 @@ export class AStar{
   * @param {Function} [options.heuristic] Heuristic function (see
   *          astar.heuristics).
   */
-  search(graph:Graph, start:GridNode, end:GridNode, options:any):GridNode[] {
+  static search(graph:Graph, start:GridNode, end:GridNode, options:any):GridNode[] {
     graph.cleanDirty();
     options = options || {};
-    let heuristic:(start:GridNode, end:GridNode) => number = options.heuristic || this.heuristics.manhattan;
+    let heuristic:(start:GridNode, end:GridNode) => number = options.heuristic || heuristics.manhattan;
     let closest = options.closest || false;
 
     let openHeap:BinaryHeap<GridNode> = new BinaryHeap<GridNode>((node:GridNode) => {return node.f});
