@@ -71,29 +71,14 @@
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AStar; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__binaryheap__ = __webpack_require__(2);
 
-// See list of heuristics: http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
-var heuristics = {
-    manhattan: function (pos0, pos1) {
-        var d1 = Math.abs(pos1.x - pos0.x);
-        var d2 = Math.abs(pos1.y - pos0.y);
-        return d1 + d2;
-    },
-    diagonal: function (pos0, pos1) {
-        var D = 1;
-        var D2 = Math.sqrt(2);
-        var d1 = Math.abs(pos1.x - pos0.x);
-        var d2 = Math.abs(pos1.y - pos0.y);
-        return (D * (d1 + d2)) + ((D2 - (2 * D)) * Math.min(d1, d2));
-    }
-};
 var AStar = /** @class */ (function () {
     function AStar() {
     }
     /**
   * Perform an A* Search on a graph given a start and end node.
   * @param {Graph} graph
-  * @param {GridNode} start
-  * @param {GridNode} end
+  * @param {IGraphNode} start
+  * @param {IGraphNode} end
   * @param {Object} [options]
   * @param {bool} [options.closest] Specifies whether to return the
              path to the closest node if the target is unreachable.
@@ -103,11 +88,10 @@ var AStar = /** @class */ (function () {
     AStar.search = function (graph, start, end, options) {
         graph.cleanDirty();
         options = options || {};
-        var heuristic = options.heuristic || heuristics.manhattan;
         var closest = options.closest || false;
         var openHeap = new __WEBPACK_IMPORTED_MODULE_0__binaryheap__["a" /* BinaryHeap */](function (node) { return node.f; });
         var closestNode = start; // set the start node to be the closest if required
-        start.h = heuristic(start, end);
+        start.h = graph.calculateHeuristic(start, end);
         graph.markDirty(start);
         openHeap.push(start);
         while (openHeap.size() > 0) {
@@ -123,7 +107,7 @@ var AStar = /** @class */ (function () {
             var neighbors = graph.neighbors(currentNode);
             for (var i = 0, il = neighbors.length; i < il; ++i) {
                 var neighbor = neighbors[i];
-                if (neighbor.closed || neighbor.isWall()) {
+                if (neighbor.closed) {
                     // Not a valid node to process, skip to next neighbor.
                     continue;
                 }
@@ -135,7 +119,7 @@ var AStar = /** @class */ (function () {
                     // Found an optimal (so far) path to this node.  Take score for node to see how good it is.
                     neighbor.visited = true;
                     neighbor.parent = currentNode;
-                    neighbor.h = neighbor.h || heuristic(neighbor, end);
+                    neighbor.h = neighbor.h || graph.calculateHeuristic(neighbor, end);
                     neighbor.g = gScore;
                     neighbor.f = neighbor.g + neighbor.h;
                     graph.markDirty(neighbor);
@@ -192,9 +176,9 @@ var AStar = /** @class */ (function () {
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__astar__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__graph__ = __webpack_require__(3);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_jquery__ = __webpack_require__(5);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_jquery__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_jquery__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_jquery__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__gridgraph__ = __webpack_require__(4);
 
 
 
@@ -204,9 +188,9 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
     Set up the demo page for the A* Search
 */
 /* global Graph, astar, $ */
-var WALL = 0, performance = window.performance;
-__WEBPACK_IMPORTED_MODULE_2_jquery__(function () {
-    var $grid = __WEBPACK_IMPORTED_MODULE_2_jquery__("#search_grid"), $selectWallFrequency = __WEBPACK_IMPORTED_MODULE_2_jquery__("#selectWallFrequency"), $selectGridSize = __WEBPACK_IMPORTED_MODULE_2_jquery__("#selectGridSize"), $checkDebug = __WEBPACK_IMPORTED_MODULE_2_jquery__("#checkDebug"), $searchDiagonal = __WEBPACK_IMPORTED_MODULE_2_jquery__("#searchDiagonal"), $checkClosest = __WEBPACK_IMPORTED_MODULE_2_jquery__("#checkClosest");
+var WALL = 10000, performance = window.performance;
+__WEBPACK_IMPORTED_MODULE_1_jquery__(function () {
+    var $grid = __WEBPACK_IMPORTED_MODULE_1_jquery__("#search_grid"), $selectWallFrequency = __WEBPACK_IMPORTED_MODULE_1_jquery__("#selectWallFrequency"), $selectGridSize = __WEBPACK_IMPORTED_MODULE_1_jquery__("#selectGridSize"), $checkDebug = __WEBPACK_IMPORTED_MODULE_1_jquery__("#checkDebug"), $searchDiagonal = __WEBPACK_IMPORTED_MODULE_1_jquery__("#searchDiagonal"), $checkClosest = __WEBPACK_IMPORTED_MODULE_1_jquery__("#checkClosest");
     var opts = {
         wallFrequency: $selectWallFrequency.val(),
         gridSize: $selectGridSize.val(),
@@ -215,34 +199,34 @@ __WEBPACK_IMPORTED_MODULE_2_jquery__(function () {
         closest: $checkClosest.is("checked")
     };
     var grid = new GraphSearch($grid, opts, __WEBPACK_IMPORTED_MODULE_0__astar__["a" /* AStar */].search);
-    __WEBPACK_IMPORTED_MODULE_2_jquery__("#btnGenerate").click(function () {
+    __WEBPACK_IMPORTED_MODULE_1_jquery__("#btnGenerate").click(function () {
         grid.initialize();
     });
     $selectWallFrequency.change(function () {
-        grid.setOption({ wallFrequency: __WEBPACK_IMPORTED_MODULE_2_jquery__(this).val() });
+        grid.setOption({ wallFrequency: __WEBPACK_IMPORTED_MODULE_1_jquery__(this).val() });
         grid.initialize();
     });
     $selectGridSize.change(function () {
-        grid.setOption({ gridSize: __WEBPACK_IMPORTED_MODULE_2_jquery__(this).val() });
+        grid.setOption({ gridSize: __WEBPACK_IMPORTED_MODULE_1_jquery__(this).val() });
         grid.initialize();
     });
     $checkDebug.change(function () {
-        grid.setOption({ debug: __WEBPACK_IMPORTED_MODULE_2_jquery__(this).is(":checked") });
+        grid.setOption({ debug: __WEBPACK_IMPORTED_MODULE_1_jquery__(this).is(":checked") });
     });
     $searchDiagonal.change(function () {
-        var val = __WEBPACK_IMPORTED_MODULE_2_jquery__(this).is(":checked");
+        var val = __WEBPACK_IMPORTED_MODULE_1_jquery__(this).is(":checked");
         grid.setOption({ diagonal: val });
         grid.graph.diagonal = val;
     });
     $checkClosest.change(function () {
-        grid.setOption({ closest: __WEBPACK_IMPORTED_MODULE_2_jquery__(this).is(":checked") });
+        grid.setOption({ closest: __WEBPACK_IMPORTED_MODULE_1_jquery__(this).is(":checked") });
     });
-    __WEBPACK_IMPORTED_MODULE_2_jquery__("#generateWeights").click(function () {
-        if (__WEBPACK_IMPORTED_MODULE_2_jquery__("#generateWeights").prop("checked")) {
-            __WEBPACK_IMPORTED_MODULE_2_jquery__('#weightsKey').slideDown();
+    __WEBPACK_IMPORTED_MODULE_1_jquery__("#generateWeights").click(function () {
+        if (__WEBPACK_IMPORTED_MODULE_1_jquery__("#generateWeights").prop("checked")) {
+            __WEBPACK_IMPORTED_MODULE_1_jquery__('#weightsKey').slideDown();
         }
         else {
-            __WEBPACK_IMPORTED_MODULE_2_jquery__('#weightsKey').slideUp();
+            __WEBPACK_IMPORTED_MODULE_1_jquery__('#weightsKey').slideUp();
         }
     });
 });
@@ -250,11 +234,11 @@ var css = { start: "start", finish: "finish", wall: "wall", active: "active" };
 function GraphSearch($graph, options, implementation) {
     this.$graph = $graph;
     this.search = implementation;
-    this.opts = __WEBPACK_IMPORTED_MODULE_2_jquery__["extend"]({ wallFrequency: 0.1, debug: true, gridSize: 10 }, options);
+    this.opts = __WEBPACK_IMPORTED_MODULE_1_jquery__["extend"]({ wallFrequency: 0.1, debug: true, gridSize: 10 }, options);
     this.initialize();
 }
 GraphSearch.prototype.setOption = function (opt) {
-    this.opts = __WEBPACK_IMPORTED_MODULE_2_jquery__["extend"](this.opts, opt);
+    this.opts = __WEBPACK_IMPORTED_MODULE_1_jquery__["extend"](this.opts, opt);
     this.drawDebugInfo();
 };
 GraphSearch.prototype.initialize = function () {
@@ -262,9 +246,9 @@ GraphSearch.prototype.initialize = function () {
     var self = this, nodes = [], $graph = this.$graph;
     $graph.empty();
     var cellWidth = ($graph.width() / this.opts.gridSize) - 2, // -2 for border
-    cellHeight = ($graph.height() / this.opts.gridSize) - 2, $cellTemplate = __WEBPACK_IMPORTED_MODULE_2_jquery__("<span />").addClass("grid_item").width(cellWidth).height(cellHeight), startSet = false;
+    cellHeight = ($graph.height() / this.opts.gridSize) - 2, $cellTemplate = __WEBPACK_IMPORTED_MODULE_1_jquery__("<span />").addClass("grid_item").width(cellWidth).height(cellHeight), startSet = false;
     for (var x = 0; x < this.opts.gridSize; x++) {
-        var $row = __WEBPACK_IMPORTED_MODULE_2_jquery__("<div class='clear' />"), nodeRow = [], gridRow = [];
+        var $row = __WEBPACK_IMPORTED_MODULE_1_jquery__("<div class='clear' />"), nodeRow = [], gridRow = [];
         for (var y = 0; y < this.opts.gridSize; y++) {
             var id = "cell_" + x + "_" + y, $cell = $cellTemplate.clone();
             $cell.attr("id", id).attr("x", x).attr("y", y);
@@ -276,10 +260,10 @@ GraphSearch.prototype.initialize = function () {
                 $cell.addClass(css.wall);
             }
             else {
-                var cell_weight = (__WEBPACK_IMPORTED_MODULE_2_jquery__("#generateWeights").prop("checked") ? (Math.floor(Math.random() * 3)) * 2 + 1 : 1);
+                var cell_weight = (__WEBPACK_IMPORTED_MODULE_1_jquery__("#generateWeights").prop("checked") ? (Math.floor(Math.random() * 3)) * 2 + 1 : 1);
                 nodeRow.push(cell_weight);
                 $cell.addClass('weight' + cell_weight);
-                if (__WEBPACK_IMPORTED_MODULE_2_jquery__("#displayWeights").prop("checked")) {
+                if (__WEBPACK_IMPORTED_MODULE_1_jquery__("#displayWeights").prop("checked")) {
                     $cell.html(cell_weight.toString());
                 }
                 if (!startSet) {
@@ -292,11 +276,11 @@ GraphSearch.prototype.initialize = function () {
         this.grid.push(gridRow);
         nodes.push(nodeRow);
     }
-    this.graph = new __WEBPACK_IMPORTED_MODULE_1__graph__["a" /* Graph */](nodes, {});
+    this.graph = new __WEBPACK_IMPORTED_MODULE_2__gridgraph__["a" /* GridGraph */](nodes, {});
     // bind cell event, set start/wall positions
     this.$cells = $graph.find(".grid_item");
     this.$cells.click(function () {
-        self.cellClicked(__WEBPACK_IMPORTED_MODULE_2_jquery__(this));
+        self.cellClicked(__WEBPACK_IMPORTED_MODULE_1_jquery__(this));
     });
 };
 GraphSearch.prototype.cellClicked = function ($end) {
@@ -313,11 +297,11 @@ GraphSearch.prototype.cellClicked = function ($end) {
     });
     var fTime = performance ? performance.now() : new Date().getTime(), duration = (fTime - sTime).toFixed(2);
     if (path.length === 0) {
-        __WEBPACK_IMPORTED_MODULE_2_jquery__("#message").text("couldn't find a path (" + duration + "ms)");
+        __WEBPACK_IMPORTED_MODULE_1_jquery__("#message").text("couldn't find a path (" + duration + "ms)");
         this.animateNoPath();
     }
     else {
-        __WEBPACK_IMPORTED_MODULE_2_jquery__("#message").text("search took " + duration + "ms.");
+        __WEBPACK_IMPORTED_MODULE_1_jquery__("#message").text("search took " + duration + "ms.");
         this.drawDebugInfo();
         this.animatePath(path);
     }
@@ -327,10 +311,10 @@ GraphSearch.prototype.drawDebugInfo = function () {
     var that = this;
     if (this.opts.debug) {
         that.$cells.each(function () {
-            var node = that.nodeFromElement(__WEBPACK_IMPORTED_MODULE_2_jquery__(this)), debug = "";
+            var node = that.nodeFromElement(__WEBPACK_IMPORTED_MODULE_1_jquery__(this)), debug = "";
             if (node.visited) {
                 debug = "F: " + node.f + "<br />G: " + node.g + "<br />H: " + node.h;
-                __WEBPACK_IMPORTED_MODULE_2_jquery__(this).html(debug);
+                __WEBPACK_IMPORTED_MODULE_1_jquery__(this).html(debug);
             }
         });
     }
@@ -510,140 +494,6 @@ var BinaryHeap = /** @class */ (function () {
 
 /***/ }),
 /* 3 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Graph; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__gridnode__ = __webpack_require__(4);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__astar__ = __webpack_require__(0);
-
-
-var Graph = /** @class */ (function () {
-    function Graph(gridIn, options) {
-        this.dirtyNodes = [];
-        options = options || {};
-        this.nodes = [];
-        this.diagonal = !!options.diagonal;
-        this.grid = [];
-        for (var x = 0; x < gridIn.length; x++) {
-            this.grid[x] = [];
-            for (var y = 0, row = gridIn[x]; y < row.length; y++) {
-                var node = new __WEBPACK_IMPORTED_MODULE_0__gridnode__["a" /* GridNode */](x, y, row[y]);
-                this.grid[x][y] = node;
-                this.nodes.push(node);
-            }
-        }
-        this.init();
-    }
-    Graph.prototype.init = function () {
-        this.dirtyNodes = [];
-        for (var i = 0; i < this.nodes.length; i++) {
-            __WEBPACK_IMPORTED_MODULE_1__astar__["a" /* AStar */].cleanNode(this.nodes[i]);
-        }
-    };
-    Graph.prototype.markDirty = function (node) {
-        this.dirtyNodes.push(node);
-    };
-    Graph.prototype.neighbors = function (node) {
-        var ret = [];
-        var x = node.x;
-        var y = node.y;
-        var grid = this.grid;
-        // West
-        if (grid[x - 1] && grid[x - 1][y]) {
-            ret.push(grid[x - 1][y]);
-        }
-        // East
-        if (grid[x + 1] && grid[x + 1][y]) {
-            ret.push(grid[x + 1][y]);
-        }
-        // South
-        if (grid[x] && grid[x][y - 1]) {
-            ret.push(grid[x][y - 1]);
-        }
-        // North
-        if (grid[x] && grid[x][y + 1]) {
-            ret.push(grid[x][y + 1]);
-        }
-        if (this.diagonal) {
-            // Southwest
-            if (grid[x - 1] && grid[x - 1][y - 1]) {
-                ret.push(grid[x - 1][y - 1]);
-            }
-            // Southeast
-            if (grid[x + 1] && grid[x + 1][y - 1]) {
-                ret.push(grid[x + 1][y - 1]);
-            }
-            // Northwest
-            if (grid[x - 1] && grid[x - 1][y + 1]) {
-                ret.push(grid[x - 1][y + 1]);
-            }
-            // Northeast
-            if (grid[x + 1] && grid[x + 1][y + 1]) {
-                ret.push(grid[x + 1][y + 1]);
-            }
-        }
-        return ret;
-    };
-    Graph.prototype.cleanDirty = function () {
-        for (var i = 0; i < this.dirtyNodes.length; i++) {
-            __WEBPACK_IMPORTED_MODULE_1__astar__["a" /* AStar */].cleanNode(this.dirtyNodes[i]);
-        }
-        this.dirtyNodes = [];
-    };
-    Graph.prototype.toString = function () {
-        var graphString = [];
-        var nodes = this.grid;
-        for (var x = 0; x < nodes.length; x++) {
-            var rowDebug = [];
-            var row = nodes[x];
-            for (var y = 0; y < row.length; y++) {
-                rowDebug.push(row[y].weight);
-            }
-            graphString.push(rowDebug.join(" "));
-        }
-        return graphString.join("\n");
-    };
-    return Graph;
-}());
-
-
-
-/***/ }),
-/* 4 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return GridNode; });
-var GridNode = /** @class */ (function () {
-    function GridNode(x, y, weight) {
-        this.f = 0;
-        this.g = 0;
-        this.h = 0;
-        this.x = x;
-        this.y = y;
-        this.weight = weight;
-    }
-    GridNode.prototype.toString = function () {
-        return "[" + this.x + " " + this.y + "]";
-    };
-    GridNode.prototype.getCost = function (fromNeighbor) {
-        // Take diagonal weight into consideration.
-        if (fromNeighbor && fromNeighbor.x != this.x && fromNeighbor.y != this.y) {
-            return this.weight * 1.41421;
-        }
-        return this.weight;
-    };
-    GridNode.prototype.isWall = function () {
-        return this.weight === 0;
-    };
-    return GridNode;
-}());
-
-
-
-/***/ }),
-/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -11011,6 +10861,163 @@ if ( !noGlobal ) {
 
 return jQuery;
 } );
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* unused harmony export heuristics */
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return GridGraph; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__gridnode__ = __webpack_require__(5);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__astar__ = __webpack_require__(0);
+
+
+// See list of heuristics: http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
+var heuristics = {
+    manhattan: function (pos0, pos1) {
+        var d1 = Math.abs(pos1.x - pos0.x);
+        var d2 = Math.abs(pos1.y - pos0.y);
+        return d1 + d2;
+    },
+    diagonal: function (pos0, pos1) {
+        var D = 1;
+        var D2 = Math.sqrt(2);
+        var d1 = Math.abs(pos1.x - pos0.x);
+        var d2 = Math.abs(pos1.y - pos0.y);
+        return (D * (d1 + d2)) + ((D2 - (2 * D)) * Math.min(d1, d2));
+    }
+};
+var GridGraph = /** @class */ (function () {
+    function GridGraph(gridIn, options) {
+        this.dirtyNodes = [];
+        options = options || {};
+        this.nodes = [];
+        this.diagonal = !!options.diagonal;
+        this.grid = [];
+        for (var x = 0; x < gridIn.length; x++) {
+            this.grid[x] = [];
+            for (var y = 0, row = gridIn[x]; y < row.length; y++) {
+                var node = new __WEBPACK_IMPORTED_MODULE_0__gridnode__["a" /* GridNode */](x, y, row[y]);
+                this.grid[x][y] = node;
+                this.nodes.push(node);
+            }
+        }
+        this.init();
+    }
+    GridGraph.prototype.init = function () {
+        this.dirtyNodes = [];
+        for (var i = 0; i < this.nodes.length; i++) {
+            __WEBPACK_IMPORTED_MODULE_1__astar__["a" /* AStar */].cleanNode(this.nodes[i]);
+        }
+    };
+    //Just doing manhatten for now.
+    GridGraph.prototype.calculateHeuristic = function (start, end) {
+        var d1 = Math.abs(end.x - start.x);
+        var d2 = Math.abs(end.y - start.y);
+        return d1 + d2;
+    };
+    GridGraph.prototype.markDirty = function (node) {
+        this.dirtyNodes.push(node);
+    };
+    GridGraph.prototype.neighbors = function (node) {
+        var ret = [];
+        var x = node.x;
+        var y = node.y;
+        var grid = this.grid;
+        // West
+        if (grid[x - 1] && grid[x - 1][y]) {
+            ret.push(grid[x - 1][y]);
+        }
+        // East
+        if (grid[x + 1] && grid[x + 1][y]) {
+            ret.push(grid[x + 1][y]);
+        }
+        // South
+        if (grid[x] && grid[x][y - 1]) {
+            ret.push(grid[x][y - 1]);
+        }
+        // North
+        if (grid[x] && grid[x][y + 1]) {
+            ret.push(grid[x][y + 1]);
+        }
+        if (this.diagonal) {
+            // Southwest
+            if (grid[x - 1] && grid[x - 1][y - 1]) {
+                ret.push(grid[x - 1][y - 1]);
+            }
+            // Southeast
+            if (grid[x + 1] && grid[x + 1][y - 1]) {
+                ret.push(grid[x + 1][y - 1]);
+            }
+            // Northwest
+            if (grid[x - 1] && grid[x - 1][y + 1]) {
+                ret.push(grid[x - 1][y + 1]);
+            }
+            // Northeast
+            if (grid[x + 1] && grid[x + 1][y + 1]) {
+                ret.push(grid[x + 1][y + 1]);
+            }
+        }
+        return ret;
+    };
+    GridGraph.prototype.cleanDirty = function () {
+        for (var i = 0; i < this.dirtyNodes.length; i++) {
+            __WEBPACK_IMPORTED_MODULE_1__astar__["a" /* AStar */].cleanNode(this.dirtyNodes[i]);
+        }
+        this.dirtyNodes = [];
+    };
+    GridGraph.prototype.toString = function () {
+        var graphString = [];
+        var nodes = this.grid;
+        for (var x = 0; x < nodes.length; x++) {
+            var rowDebug = [];
+            var row = nodes[x];
+            for (var y = 0; y < row.length; y++) {
+                rowDebug.push(row[y].weight);
+            }
+            graphString.push(rowDebug.join(" "));
+        }
+        return graphString.join("\n");
+    };
+    return GridGraph;
+}());
+
+
+
+/***/ }),
+/* 5 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return GridNode; });
+var GridNode = /** @class */ (function () {
+    function GridNode(x, y, weight) {
+        this.f = 0;
+        this.g = 0;
+        this.h = 0;
+        this.x = x;
+        this.y = y;
+        this.weight = weight;
+    }
+    GridNode.prototype.isWall = function () {
+        return this.weight === 10000;
+    };
+    //Implementing from interface
+    GridNode.prototype.toString = function () {
+        return "[" + this.x + " " + this.y + "]";
+    };
+    GridNode.prototype.getCost = function (fromNeighbor) {
+        // Take diagonal weight into consideration.
+        if (fromNeighbor && fromNeighbor.x != this.x && fromNeighbor.y != this.y) {
+            return this.weight * 1.41421;
+        }
+        return this.weight;
+    };
+    return GridNode;
+}());
+
 
 
 /***/ })

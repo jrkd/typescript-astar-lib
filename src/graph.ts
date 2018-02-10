@@ -1,109 +1,13 @@
-import {GridNode} from "./gridnode";
-import {AStar} from "./astar"; 
+import { IGraphNode } from "./graphnode";
 
-export class Graph{
-    nodes:GridNode[];
-    diagonal:boolean;
-    grid:GridNode[][];
-    dirtyNodes:GridNode[] = [];
+export interface IGraph{
+    nodes:IGraphNode[];
+    dirtyNodes:IGraphNode[];
 
-    constructor(gridIn, options) {
-        options = options || {};
-        this.nodes = [];
-        this.diagonal = !!options.diagonal;
-        this.grid = [];
-        for (var x = 0; x < gridIn.length; x++) {
-            this.grid[x] = [];
-
-            for (var y = 0, row = gridIn[x]; y < row.length; y++) {
-                var node = new GridNode(x, y, row[y]);
-                this.grid[x][y] = node;
-                this.nodes.push(node);
-            }
-        }
-        this.init();
-    }
-
-    init():void {
-        this.dirtyNodes = [];
-        for (var i = 0; i < this.nodes.length; i++) {
-            AStar.cleanNode(this.nodes[i]);
-        }
-    }
-
-    markDirty(node:GridNode):void {
-        this.dirtyNodes.push(node);
-    }
-
-    neighbors(node:GridNode):GridNode[] {
-        var ret = [];
-        var x = node.x;
-        var y = node.y;
-        var grid = this.grid;
-      
-        // West
-        if (grid[x - 1] && grid[x - 1][y]) {
-          ret.push(grid[x - 1][y]);
-        }
-      
-        // East
-        if (grid[x + 1] && grid[x + 1][y]) {
-          ret.push(grid[x + 1][y]);
-        }
-      
-        // South
-        if (grid[x] && grid[x][y - 1]) {
-          ret.push(grid[x][y - 1]);
-        }
-      
-        // North
-        if (grid[x] && grid[x][y + 1]) {
-          ret.push(grid[x][y + 1]);
-        }
-      
-        if (this.diagonal) {
-          // Southwest
-          if (grid[x - 1] && grid[x - 1][y - 1]) {
-            ret.push(grid[x - 1][y - 1]);
-          }
-      
-          // Southeast
-          if (grid[x + 1] && grid[x + 1][y - 1]) {
-            ret.push(grid[x + 1][y - 1]);
-          }
-      
-          // Northwest
-          if (grid[x - 1] && grid[x - 1][y + 1]) {
-            ret.push(grid[x - 1][y + 1]);
-          }
-      
-          // Northeast
-          if (grid[x + 1] && grid[x + 1][y + 1]) {
-            ret.push(grid[x + 1][y + 1]);
-          }
-        }
-      
-        return ret;
-      }
-
-      cleanDirty():void {
-        for (var i = 0; i < this.dirtyNodes.length; i++) {
-          AStar.cleanNode(this.dirtyNodes[i]);
-        }
-        this.dirtyNodes = [];
-      }
-
-      toString():string {
-        let graphString:string[] = [];
-        let nodes:GridNode[][] = this.grid;
-        for (let x:number = 0; x < nodes.length; x++) {
-          let rowDebug:number[] = [];
-          let row:GridNode[] = nodes[x];
-          for (var y = 0; y < row.length; y++) {
-            rowDebug.push(row[y].weight);
-          }
-          graphString.push(rowDebug.join(" "));
-        }
-        return graphString.join("\n");
-      }
+    init():void;
+    neighbors(node:IGraphNode):IGraphNode[];
+    calculateHeuristic(start:IGraphNode, end:IGraphNode):number;
+    markDirty(node:IGraphNode):void;
+    cleanDirty():void;
+    toString():string;
 }

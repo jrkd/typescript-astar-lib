@@ -1,6 +1,6 @@
 import {AStar} from "./astar";
-import {Graph} from "./graph";
 import * as $ from "jquery"; 
+import { GridGraph } from "./gridgraph";
 
 /*  demo.js http://github.com/bgrins/javascript-astar
     MIT License
@@ -10,7 +10,7 @@ import * as $ from "jquery";
 /* global Graph, astar, $ */
 
 
-var WALL = 0,
+var WALL = 10000,
     performance = window.performance;
 
 $(function() {
@@ -130,7 +130,7 @@ GraphSearch.prototype.initialize = function() {
         nodes.push(nodeRow);
     }
 
-    this.graph = new Graph(nodes, {});
+    this.graph = new GridGraph(nodes, {});
 
     // bind cell event, set start/wall positions
     this.$cells = $graph.find(".grid_item");
