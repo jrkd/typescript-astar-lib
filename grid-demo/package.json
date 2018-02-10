@@ -1,0 +1,30 @@
+{
+  "name": "javascript-astar",
+  "version": "0.4.1",
+  "description": "astar search algorithm in JavaScript",
+  "main": "output/index.js",
+  "typings": "output/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/bgrins/javascript-astar.git"
+  },
+  "keywords": [],
+  "author": "Brian Grinstead",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bgrins/javascript-astar/issues"
+  },
+  "homepage": "http://bgrins.github.io/javascript-astar",
+  "dependencies": {},
+  "devDependencies": {
+    "new-astar": "file:///../lib",
+    "ts-loader": "^3.5.0",
+    "typescript": "^2.7.1",
+    "webpack": "^3.10.0",
+    "jquery": "3.3.1",
+    "@types/jquery": "3.3.0"
+  },
+  "scripts": {
+    "build": "webpack"
+  }
+}
