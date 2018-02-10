@@ -1,3 +1,5 @@
+import {AStar, GridGraph} from "new-astar";
+import * as $ from "jquery"; 
 
 /*  demo.js http://github.com/bgrins/javascript-astar
     MIT License
@@ -7,7 +9,7 @@
 /* global Graph, astar, $ */
 
 
-var WALL = 0,
+var WALL = 10000,
     performance = window.performance;
 
 $(function() {
@@ -113,7 +115,7 @@ GraphSearch.prototype.initialize = function() {
                 nodeRow.push(cell_weight);
                 $cell.addClass('weight' + cell_weight);
                 if ($("#displayWeights").prop("checked")) {
-                    $cell.html(cell_weight);
+                    $cell.html(cell_weight.toString());
                 }
                 if (!startSet) {
                     $cell.addClass(css.start);
@@ -127,7 +129,7 @@ GraphSearch.prototype.initialize = function() {
         nodes.push(nodeRow);
     }
 
-    this.graph = new Graph(nodes);
+    this.graph = new GridGraph(nodes, {});
 
     // bind cell event, set start/wall positions
     this.$cells = $graph.find(".grid_item");
@@ -172,12 +174,9 @@ GraphSearch.prototype.drawDebugInfo = function() {
     if(this.opts.debug) {
         that.$cells.each(function() {
             var node = that.nodeFromElement($(this)),
-                debug = false;
+                debug = "";
             if (node.visited) {
                 debug = "F: " + node.f + "<br />G: " + node.g + "<br />H: " + node.h;
-            }
-
-            if (debug) {
                 $(this).html(debug);
             }
         });
@@ -197,7 +196,7 @@ GraphSearch.prototype.animateNoPath = function() {
             jiggle(lim, i);
         }, 5);
     };
-    jiggle(15);
+    jiggle(15, 0);
 };
 GraphSearch.prototype.animatePath = function(path) {
     var grid = this.grid,

@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+      "outDir": "./output/",
+      "noImplicitAny": false,
+      "sourceMap": true,
+      "module": "commonjs",
+      "target": "es6",
+      "allowJs": false, 
+      "declaration": true, 
+      "typeRoots": [
+        "./node_modules/@types"
+      ]
+    }, 
+    "exclude": [
+      "node_modules",
+      "./output"
+    ]
+  }

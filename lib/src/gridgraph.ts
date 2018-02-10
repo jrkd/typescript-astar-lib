@@ -1,7 +1,25 @@
 import {GridNode} from "./gridnode";
 import {AStar} from "./astar"; 
+import { IGraph } from "./graph";
 
-export class Graph{
+// See list of heuristics: http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
+export var heuristics = {
+  manhattan: function(pos0:GridNode, pos1:GridNode):number {
+      let d1:number = Math.abs(pos1.x - pos0.x);
+      let d2:number = Math.abs(pos1.y - pos0.y);
+      return d1 + d2; 
+  },
+  diagonal: function(pos0:GridNode, pos1:GridNode):number {
+      let D:number = 1;
+      let D2:number = Math.sqrt(2);
+      let d1:number = Math.abs(pos1.x - pos0.x);
+      let d2:number = Math.abs(pos1.y - pos0.y);
+      return (D * (d1 + d2)) + ((D2 - (2 * D)) * Math.min(d1, d2));
+  }
+};
+
+export class GridGraph implements IGraph{
+  
     nodes:GridNode[];
     diagonal:boolean;
     grid:GridNode[][];
@@ -29,6 +47,14 @@ export class Graph{
         for (var i = 0; i < this.nodes.length; i++) {
             AStar.cleanNode(this.nodes[i]);
         }
+    }
+
+
+    //Just doing manhatten for now.
+    calculateHeuristic(start:GridNode, end:GridNode): number {
+        let d1:number = Math.abs(end.x - start.x);
+        let d2:number = Math.abs(end.y - start.y);
+        return d1 + d2; 
     }
 
     markDirty(node:GridNode):void {

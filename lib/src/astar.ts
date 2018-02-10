@@ -1,48 +1,29 @@
-import {GridNode} from "./gridnode";
-import {Graph} from "./graph";
+import {IGraphNode} from "./graphnode";
+import {IGraph} from "./graph";
 import {BinaryHeap} from "./binaryheap";
 
-// See list of heuristics: http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
-var heuristics = {
-    manhattan: function(pos0:GridNode, pos1:GridNode):number {
-        let d1:number = Math.abs(pos1.x - pos0.x);
-        let d2:number = Math.abs(pos1.y - pos0.y);
-        return d1 + d2; 
-    },
-    diagonal: function(pos0:GridNode, pos1:GridNode):number {
-        let D:number = 1;
-        let D2:number = Math.sqrt(2);
-        let d1:number = Math.abs(pos1.x - pos0.x);
-        let d2:number = Math.abs(pos1.y - pos0.y);
-        return (D * (d1 + d2)) + ((D2 - (2 * D)) * Math.min(d1, d2));
-    }
-};
-
 export class AStar{
-
-
 
     /**
   * Perform an A* Search on a graph given a start and end node.
   * @param {Graph} graph
-  * @param {GridNode} start
-  * @param {GridNode} end
+  * @param {IGraphNode} start
+  * @param {IGraphNode} end
   * @param {Object} [options]
   * @param {bool} [options.closest] Specifies whether to return the
              path to the closest node if the target is unreachable.
   * @param {Function} [options.heuristic] Heuristic function (see
   *          astar.heuristics).
   */
-  static search(graph:Graph, start:GridNode, end:GridNode, options:any):GridNode[] {
+  static search(graph:IGraph, start:IGraphNode, end:IGraphNode, options:any):IGraphNode[] {
     graph.cleanDirty();
     options = options || {};
-    let heuristic:(start:GridNode, end:GridNode) => number = options.heuristic || heuristics.manhattan;
     let closest = options.closest || false;
 
-    let openHeap:BinaryHeap<GridNode> = new BinaryHeap<GridNode>((node:GridNode) => {return node.f});
-    let closestNode:GridNode = start; // set the start node to be the closest if required
+    let openHeap:BinaryHeap<IGraphNode> = new BinaryHeap<IGraphNode>((node:IGraphNode) => {return node.f});
+    let closestNode:IGraphNode = start; // set the start node to be the closest if required
 
-    start.h = heuristic(start, end);
+    start.h = graph.calculateHeuristic(start, end);
     graph.markDirty(start);
 
     openHeap.push(start);
@@ -50,7 +31,7 @@ export class AStar{
     while (openHeap.size() > 0) {
 
       // Grab the lowest f(x) to process next.  Heap keeps this sorted for us.
-      let currentNode:GridNode = openHeap.pop();
+      let currentNode:IGraphNode = openHeap.pop();
 
       // End case -- result has been found, return the traced path.
       if (currentNode === end) {
@@ -61,12 +42,12 @@ export class AStar{
       currentNode.closed = true;
 
       // Find all neighbors for the current node.
-      let neighbors:GridNode[] = graph.neighbors(currentNode);
+      let neighbors:IGraphNode[] = graph.neighbors(currentNode);
 
       for (let i:number = 0, il = neighbors.length; i < il; ++i) {
-        let neighbor:GridNode = neighbors[i];
+        let neighbor:IGraphNode = neighbors[i];
 
-        if (neighbor.closed || neighbor.isWall()) {
+        if (neighbor.closed) {
           // Not a valid node to process, skip to next neighbor.
           continue;
         }
@@ -81,7 +62,7 @@ export class AStar{
           // Found an optimal (so far) path to this node.  Take score for node to see how good it is.
           neighbor.visited = true;
           neighbor.parent = currentNode;
-          neighbor.h = neighbor.h || heuristic(neighbor, end);
+          neighbor.h = neighbor.h || graph.calculateHeuristic(neighbor, end);
           neighbor.g = gScore;
           neighbor.f = neighbor.g + neighbor.h;
           graph.markDirty(neighbor);
@@ -112,7 +93,7 @@ export class AStar{
     return [];
   }
 
-  static cleanNode(node:GridNode):void {
+  static cleanNode(node:IGraphNode):void {
     node.f = 0;
     node.g = 0;
     node.h = 0;
@@ -121,7 +102,7 @@ export class AStar{
     node.parent = null;
   }
 
-  static pathTo(node:GridNode):GridNode[] {
+  static pathTo(node:IGraphNode):IGraphNode[] {
     var curr = node;
     var path = [];
     while (curr.parent) {

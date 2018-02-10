@@ -1,7 +1,11 @@
-export class GridNode{
+import { IGraphNode } from "./graphnode";
+
+export class GridNode implements IGraphNode{
     x: number;
     y:number;
     weight:number;
+
+    //implemented from IGraphNode
     visited:boolean;
     f:number = 0;
     g:number = 0;
@@ -9,12 +13,17 @@ export class GridNode{
     closed:boolean;
     parent:GridNode;
 
-    constructor(x, y, weight) {
+    constructor(x:number, y:number, weight:number) {
         this.x = x;
         this.y = y;
         this.weight = weight;
     }
+    
+    isWall():boolean{
+        return this.weight === 10000;
+    }
 
+    //Implementing from interface
     toString():string {
         return "[" + this.x + " " + this.y + "]";
     }
@@ -25,9 +34,5 @@ export class GridNode{
             return this.weight * 1.41421;
         }
         return this.weight;
-    }
-
-    isWall():boolean{
-        return this.weight === 0;
     }
 }
