@@ -2,7 +2,8 @@
   "name": "javascript-astar",
   "version": "0.4.1",
   "description": "astar search algorithm in JavaScript",
-  "main": "astar.ts",
+  "main": "output/index.js",
+  "typings": "output/index.d.ts",
   "repository": {
     "type": "git",
     "url": "git://github.com/bgrins/javascript-astar.git"
@@ -16,6 +17,7 @@
   "homepage": "http://bgrins.github.io/javascript-astar",
   "dependencies": {},
   "devDependencies": {
+    "new-astar": "file:///../lib",
     "ts-loader": "^3.5.0",
     "typescript": "^2.7.1",
     "webpack": "^3.10.0",

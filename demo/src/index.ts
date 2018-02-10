@@ -1,6 +1,5 @@
-import {AStar} from "./astar";
+import {AStar, GridGraph} from "new-astar";
 import * as $ from "jquery"; 
-import { GridGraph } from "./gridgraph";
 
 /*  demo.js http://github.com/bgrins/javascript-astar
     MIT License
