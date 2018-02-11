@@ -1,6 +1,7 @@
 import {GridNode} from "./gridnode";
 import {AStar} from "./astar"; 
 import { IGraph } from "./graph";
+import { GridEdge } from "./gridedge";
 
 // See list of heuristics: http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
 export var heuristics = {
@@ -20,6 +21,7 @@ export var heuristics = {
 
 export class GridGraph implements IGraph{
   
+    edges: GridEdge[];
     nodes:GridNode[];
     diagonal:boolean;
     grid:GridNode[][];
@@ -39,6 +41,13 @@ export class GridGraph implements IGraph{
                 this.nodes.push(node);
             }
         }
+        
+        //After creating nodes on grid, 
+        //pre-load edge data so we dont calculate every time.
+        this.nodes.forEach(node => {
+          node.adjacentEdges = this.generateEdgesForNode(node, this.grid);
+        });
+
         this.init();
     }
 
@@ -61,56 +70,58 @@ export class GridGraph implements IGraph{
         this.dirtyNodes.push(node);
     }
 
-    neighbors(node:GridNode):GridNode[] {
-        var ret = [];
-        var x = node.x;
-        var y = node.y;
-        var grid = this.grid;
-      
-        // West
-        if (grid[x - 1] && grid[x - 1][y]) {
-          ret.push(grid[x - 1][y]);
-        }
-      
-        // East
-        if (grid[x + 1] && grid[x + 1][y]) {
-          ret.push(grid[x + 1][y]);
-        }
-      
-        // South
-        if (grid[x] && grid[x][y - 1]) {
-          ret.push(grid[x][y - 1]);
-        }
-      
-        // North
-        if (grid[x] && grid[x][y + 1]) {
-          ret.push(grid[x][y + 1]);
-        }
-      
-        if (this.diagonal) {
-          // Southwest
-          if (grid[x - 1] && grid[x - 1][y - 1]) {
-            ret.push(grid[x - 1][y - 1]);
-          }
-      
-          // Southeast
-          if (grid[x + 1] && grid[x + 1][y - 1]) {
-            ret.push(grid[x + 1][y - 1]);
-          }
-      
-          // Northwest
-          if (grid[x - 1] && grid[x - 1][y + 1]) {
-            ret.push(grid[x - 1][y + 1]);
-          }
-      
-          // Northeast
-          if (grid[x + 1] && grid[x + 1][y + 1]) {
-            ret.push(grid[x + 1][y + 1]);
-          }
-        }
-      
-        return ret;
+    generateEdgesForNode(node:GridNode, grid:GridNode[][]):GridEdge[]{
+      let edges:GridEdge[] = [];
+      var x = node.x;
+      var y = node.y;
+    
+      // West
+      if (grid[x - 1] && grid[x - 1][y]) {
+        edges.push(new GridEdge(grid[x - 1][y].weight, grid[x - 1][y]));
       }
+    
+      // East
+      if (grid[x + 1] && grid[x + 1][y]) {
+        edges.push(new GridEdge(grid[x + 1][y].weight, grid[x + 1][y]));
+      }
+    
+      // South
+      if (grid[x] && grid[x][y - 1]) {
+        edges.push(new GridEdge(grid[x][y - 1].weight, grid[x][y - 1]));
+      }
+    
+      // North
+      if (grid[x] && grid[x][y + 1]) {
+        edges.push(new GridEdge(grid[x][y + 1].weight, grid[x][y + 1]));
+      }
+    
+      if (this.diagonal) {
+        // Southwest
+        if (grid[x - 1] && grid[x - 1][y - 1]) {
+          edges.push(new GridEdge(grid[x - 1][y - 1].weight, grid[x - 1][y - 1]));
+        }
+    
+        // Southeast
+        if (grid[x + 1] && grid[x + 1][y - 1]) {
+          edges.push(new GridEdge(grid[x + 1][y - 1].weight, grid[x + 1][y - 1]));
+        }
+    
+        // Northwest
+        if (grid[x - 1] && grid[x - 1][y + 1]) {
+          edges.push(new GridEdge(grid[x - 1][y + 1].weight, grid[x - 1][y + 1]));
+        }
+    
+        // Northeast
+        if (grid[x + 1] && grid[x + 1][y + 1]) {
+          edges.push(new GridEdge(grid[x + 1][y + 1].weight, grid[x + 1][y + 1]));
+        }
+      }
+    
+      return edges;
+    }
+    neighbors(node:GridNode):GridNode[] {
+      return node.adjacentEdges.map(edge => edge.nextNode);
+    }
 
       cleanDirty():void {
         for (var i = 0; i < this.dirtyNodes.length; i++) {
