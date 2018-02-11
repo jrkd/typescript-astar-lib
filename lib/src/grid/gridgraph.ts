@@ -1,7 +1,7 @@
 import {GridNode} from "./gridnode";
-import {AStar} from "./astar"; 
-import { IGraph } from "./graph";
-import { GridEdge } from "./gridedge";
+import {AStar} from "./../astar"; 
+import { IGraph } from "./../graph";
+import { GridEdge } from "./../gridedge";
 
 // See list of heuristics: http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
 export var heuristics = {

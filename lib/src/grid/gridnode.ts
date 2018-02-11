@@ -1,6 +1,6 @@
-import { IGraphNode } from "./graphnode";
-import { IGraphEdge } from "./graphedge";
-import { GridEdge } from "./gridedge";
+import { IGraphNode } from "./../graphnode";
+import { IGraphEdge } from "./../graphedge";
+import { GridEdge } from "./../gridedge";
 
 export class GridNode implements IGraphNode{
     x: number;

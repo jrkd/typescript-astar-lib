@@ -1,4 +1,5 @@
 import { NodeWorldState } from "./world-state";
+import { IGraphEdge } from "../graphedge";
 
 export interface IAction { //should be an interface.
     preconditions:NodeWorldState;//Number of preconditions is number of changes to worldstate
@@ -10,7 +11,9 @@ export interface IAction { //should be an interface.
     ActivateAction(current:NodeWorldState):void //Trigger animation or movement 
 }
 
-export class NodeAction implements IAction {
+export class NodeAction implements IAction, IGraphEdge {
+    nextNode: NodeWorldState; //Surely this is the effects?
+    prevNode: NodeWorldState;
     preconditions: NodeWorldState;
     effects: NodeWorldState;
     cost: number;

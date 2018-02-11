@@ -1,7 +1,9 @@
-import { IGraphNode } from "..";
+import { IGraphNode } from "./../graphnode";
+import { NodeAction } from "./action";
 
 export class NodeWorldState implements IGraphNode {
     
+    adjacentEdges: NodeAction[];
     //from node interface
     visited: boolean;
     f: number;
