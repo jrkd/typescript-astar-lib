@@ -43,10 +43,10 @@ export class AStar{
       currentNode.closed = true;
 
       // Find all neighbors for the current node.
-      //let neighbors:IGraphNode[] = graph.neighbors(currentNode);--using edges now
+      let neighborEdges:IGraphEdge[] = graph.neighborEdges(currentNode);
 
-      for(let index:number = 0; index < currentNode.adjacentEdges.length; ++index){
-        let neighbor:IGraphNode = currentNode.adjacentEdges[index].nextNode;
+      for(let index:number = 0; index < neighborEdges.length; ++index){
+        let neighbor:IGraphNode = neighborEdges[index].nextNode;
 
         if (neighbor.closed) {
           // Not a valid node to process, skip to next neighbor.
@@ -63,7 +63,7 @@ export class AStar{
           // Found an optimal (so far) path to this node.  Take score for node to see how good it is.
           neighbor.visited = true;
           //neighbor.parent = currentNode;
-          currentNode.selectedEdge = currentNode.adjacentEdges[index];
+          currentNode.selectedEdge = neighborEdges[index];
           neighbor.h = neighbor.h || graph.calculateHeuristic(neighbor, end);
           neighbor.g = gScore;
           neighbor.f = neighbor.g + neighbor.h;

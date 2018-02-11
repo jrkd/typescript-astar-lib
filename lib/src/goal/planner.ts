@@ -3,17 +3,17 @@ import { NodeWorldState } from "./world-state";
 import { IAction, NodeAction } from "./action";
 
 export class Planner implements IGraph {
-    edges: NodeAction[]; //actions
-    nodes:NodeWorldState[];
-    dirtyNodes:NodeWorldState[];
+    edges: NodeAction[] = []; //actions
+    nodes:NodeWorldState[] = [];
+    dirtyNodes:NodeWorldState[] = [];
     init(): void {
         //nothin
     }
-    neighbors(node:NodeWorldState): NodeWorldState[] {
+    neighborEdges(node:NodeWorldState): NodeAction[] {
         return this.edges
             .filter(function(action:NodeAction) { //only select actions that have their precons met.
                 return action.preconditions.containedWithin(node);
-            }).map(edge => edge.nextNode); //Flatten list to the next nodes of each edge.
+            });
     }
     calculateHeuristic(start: NodeWorldState, end: NodeWorldState):number {
         return 0;

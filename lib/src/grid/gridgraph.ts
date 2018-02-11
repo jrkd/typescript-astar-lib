@@ -119,8 +119,8 @@ export class GridGraph implements IGraph{
     
       return edges;
     }
-    neighbors(node:GridNode):GridNode[] {
-      return node.adjacentEdges.map(edge => edge.nextNode);
+    neighborEdges(node:GridNode):GridEdge[] {
+      return node.adjacentEdges;
     }
 
       cleanDirty():void {

@@ -2,7 +2,7 @@ import { IGraphNode } from "./../graphnode";
 import { NodeAction } from "./action";
 
 export class NodeWorldState implements IGraphNode {
-    
+    selectedEdge:NodeAction;
     adjacentEdges: NodeAction[];
     //from node interface
     visited: boolean;
@@ -37,4 +37,5 @@ export class NodeWorldState implements IGraphNode {
         return true; //todo:dd
     }
 
+    
 }

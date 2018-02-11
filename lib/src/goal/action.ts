@@ -12,6 +12,7 @@ export interface IAction { //should be an interface.
 }
 
 export class NodeAction implements IAction, IGraphEdge {
+    public name:string;
     nextNode: NodeWorldState; //Surely this is the effects?
     prevNode: NodeWorldState;
     preconditions: NodeWorldState;
@@ -21,7 +22,8 @@ export class NodeAction implements IAction, IGraphEdge {
     checkAdditionalPreconditions(current:NodeWorldState): boolean {
         return true; //check precondition against current world state
     }
-    ActivateAction(current:NodeWorldState): void {
+    ActivateAction(current:NodeWorldState):NodeWorldState {
+        return current;
         //current += this.effects; apply effects to world state.
     }
 }
