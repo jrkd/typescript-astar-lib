@@ -33,6 +33,7 @@ $(function() {
     let takeMoneyFromBank:NodeAction = new NodeAction();
     takeMoneyFromBank.name = "Take money from bank";
     takeMoneyFromBank.cost = 1;
+    takeMoneyFromBank.preconditions = new NodeWorldState();
     takeMoneyFromBank.preconditions.myPosX = 100;
     takeMoneyFromBank.preconditions.myPosY = 100;
     takeMoneyFromBank.preconditions.moneyAtBank = 100;
