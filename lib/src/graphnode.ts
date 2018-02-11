@@ -6,8 +6,14 @@ export interface IGraphNode{
     g:number;
     h:number;
     closed:boolean;
-    parent:IGraphNode;
+    
+    
+    //parent:IGraphNode;
+    //if we're using edges properly, then parent doesnt exist
+    selectedEdge:IGraphEdge;
+    
     adjacentEdges:IGraphEdge[];
+
 
     toString():string;
     getCost(fromNeighbor:IGraphNode):number;

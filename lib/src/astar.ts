@@ -1,6 +1,7 @@
 import {IGraphNode} from "./graphnode";
 import {IGraph} from "./graph";
 import {BinaryHeap} from "./binaryheap";
+import { IGraphEdge } from "./graphedge";
 
 export class AStar{
 
@@ -15,7 +16,7 @@ export class AStar{
   * @param {Function} [options.heuristic] Heuristic function (see
   *          astar.heuristics).
   */
-  static search(graph:IGraph, start:IGraphNode, end:IGraphNode, options:any):IGraphNode[] {
+  static search(graph:IGraph, start:IGraphNode, end:IGraphNode, options:any):IGraphEdge[] {
     graph.cleanDirty();
     options = options || {};
     let closest = options.closest || false;
@@ -35,17 +36,17 @@ export class AStar{
 
       // End case -- result has been found, return the traced path.
       if (currentNode === end) {
-        return AStar.pathTo(currentNode);
+        return AStar.pathTo(start, currentNode);
       }
 
       // Normal case -- move currentNode from open to closed, process each of its neighbors.
       currentNode.closed = true;
 
       // Find all neighbors for the current node.
-      let neighbors:IGraphNode[] = graph.neighbors(currentNode);
+      //let neighbors:IGraphNode[] = graph.neighbors(currentNode);--using edges now
 
-      for (let i:number = 0, il = neighbors.length; i < il; ++i) {
-        let neighbor:IGraphNode = neighbors[i];
+      for(let index:number = 0; index < currentNode.adjacentEdges.length; ++index){
+        let neighbor:IGraphNode = currentNode.adjacentEdges[index].nextNode;
 
         if (neighbor.closed) {
           // Not a valid node to process, skip to next neighbor.
@@ -61,7 +62,8 @@ export class AStar{
 
           // Found an optimal (so far) path to this node.  Take score for node to see how good it is.
           neighbor.visited = true;
-          neighbor.parent = currentNode;
+          //neighbor.parent = currentNode;
+          currentNode.selectedEdge = currentNode.adjacentEdges[index];
           neighbor.h = neighbor.h || graph.calculateHeuristic(neighbor, end);
           neighbor.g = gScore;
           neighbor.f = neighbor.g + neighbor.h;
@@ -86,7 +88,7 @@ export class AStar{
     }
 
     if (closest) {
-      return AStar.pathTo(closestNode);
+      return AStar.pathTo(start, closestNode);
     }
 
     // No result was found - empty array signifies failure to find path.
@@ -99,15 +101,16 @@ export class AStar{
     node.h = 0;
     node.visited = false;
     node.closed = false;
-    node.parent = null;
+    //node.parent = null;
+    node.selectedEdge = null;
   }
 
-  static pathTo(node:IGraphNode):IGraphNode[] {
-    var curr = node;
-    var path = [];
-    while (curr.parent) {
-      path.unshift(curr);
-      curr = curr.parent;
+  static pathTo(startNode:IGraphNode, goalNode:IGraphNode):IGraphEdge[] {
+    let curr:IGraphNode = startNode;
+    let path:IGraphEdge[] = [];
+    while (curr.selectedEdge != null) {
+      path.push(curr.selectedEdge);
+      curr = curr.selectedEdge.nextNode;
     }
     return path;
   }
