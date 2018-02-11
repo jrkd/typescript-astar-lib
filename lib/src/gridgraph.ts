@@ -120,11 +120,7 @@ export class GridGraph implements IGraph{
       return edges;
     }
     neighbors(node:GridNode):GridNode[] {
-      let neighbors:GridNode[] = [];
-      node.adjacentEdges.forEach(edge => {
-        neighbors.push(edge.nextNode);
-      });    
-      return neighbors;
+      return node.adjacentEdges.map(edge => edge.nextNode);
     }
 
       cleanDirty():void {
