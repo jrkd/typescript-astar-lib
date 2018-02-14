@@ -1,0 +1,15 @@
+Can we pre-compute the graph nodes and edges based on the actions at the start?
+- If we have a more legit graph with real world stuff, or even just if things about the worldstate are changing dynamically (eg outside the effects of the graph) can we do this?
+
+Setup costs properly -- should be fairly straight forward. Test is to tweak them and see plan change. 
+
+- the re-mapping of the path part way through will only work with both of these i think?
+
+Our man setup priority of actions in a list -- easy to implement, but makes me wonder why we dont define a hueristic that describes "how much closer to the goal are we", "how far away from the start are we"
+I suppose its hard to quantify this across different data structures that are all stored in the world state. hmm.
+
+
+After all that, need to think about 
+- actions that take time to execute 
+- whether we'd need more complicated pre-conditions like hunger > 50, or effect move x over time..?
+- think about how this would work when youve got multiple agents that all change the world, and a user that changes the world. 
