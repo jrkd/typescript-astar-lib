@@ -20,7 +20,7 @@ export var heuristics = {
 };
 
 export class GridGraph implements IGraph{
-  
+
     edges: GridEdge[];
     nodes:GridNode[];
     diagonal:boolean;
@@ -142,5 +142,9 @@ export class GridGraph implements IGraph{
           graphString.push(rowDebug.join(" "));
         }
         return graphString.join("\n");
+      }
+
+      isAtGoal(currentNode:GridNode, goalNode:GridNode): boolean {
+        return currentNode.x == goalNode.x && currentNode.y == goalNode.y;
       }
 }

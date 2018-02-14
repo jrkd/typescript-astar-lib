@@ -35,7 +35,7 @@ export class AStar{
       let currentNode:IGraphNode = openHeap.pop();
 
       // End case -- result has been found, return the traced path.
-      if (currentNode === end) {
+      if (graph.isAtGoal(currentNode, end))  {
         return AStar.pathTo(start, currentNode);
       }
 

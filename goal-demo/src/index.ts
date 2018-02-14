@@ -81,7 +81,7 @@ $(function() {
     }
     results.forEach((result:NodeAction) => {
         currentNode = result.ActivateAction(currentNode);
-        $plannerResults.insertAfter("<li>"+result.name+"</li>");
+        $plannerResults.append("<li>"+result.name+"</li>");
     });
 
     $("#btnGenerate").click(function() {

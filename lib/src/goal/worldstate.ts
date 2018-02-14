@@ -49,9 +49,9 @@ export class WorldState{
         //Check that all our keys exist in the fullState, 
         //and the values for ours match the fullstates version of them.
         return ourKeys.every(key => fullState[key] === this[key]);
-    }
+    } 
 
     applyTo(fullState:WorldState):WorldState{
-        return _.merge(fullState, this);
+        return _.merge(_.cloneDeep(fullState), this);
     }
 }

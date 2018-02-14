@@ -15,13 +15,17 @@ export interface IAction { //should be an interface.
 export class NodeAction implements IAction, IGraphEdge {
     public name:string;
     prevNode: GoalNode;
+    _nextNode:GoalNode;
     preconditions: WorldState;
     effects:WorldState;
 
     get nextNode():GoalNode{
-        let nextNode:GoalNode = new GoalNode();
-        nextNode.state = this.effects.applyTo(this.prevNode.state);
-        return nextNode;
+        if(this._nextNode){
+            return this._nextNode;
+        }
+        this._nextNode = new GoalNode();
+        this._nextNode.state = this.effects.applyTo(this.prevNode.state);
+        return this._nextNode;
     }
 
     cost: number;
