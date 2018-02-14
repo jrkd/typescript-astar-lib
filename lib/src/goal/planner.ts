@@ -1,11 +1,13 @@
+import * as _ from "lodash";
+
 import { IGraph } from "./../graph";
-import { NodeWorldState } from "./world-state";
+import { GoalNode } from "./goalnode";
 import { IAction, NodeAction } from "./action";
 
 export class Planner implements IGraph {
     edges: NodeAction[] = []; //actions
-    nodes:NodeWorldState[] = [];
-    dirtyNodes:NodeWorldState[] = [];
+    nodes:GoalNode[] = [];
+    dirtyNodes:GoalNode[] = [];
     init(): void {
         //nothin
     }
@@ -50,16 +52,22 @@ export class Planner implements IGraph {
     // console.log(match);
 
     // thats all that we need right? Dunno need to look again.
-    neighborEdges(node:NodeWorldState): NodeAction[] {
-        return this.edges
+    neighborEdges(node:GoalNode): NodeAction[] {
+        let neighbors:NodeAction[] = this.edges
             .filter(function(action:NodeAction) { //only select actions that have their precons met.
-                return action.preconditions.containedWithin(node);
+                
+                return action.preconditions.containedWithin(node.state);
             });
+        neighbors = _.cloneDeep(neighbors);
+        neighbors.forEach(neighbor => {
+            neighbor.prevNode = node;
+        });
+        return neighbors;
     }
-    calculateHeuristic(start: NodeWorldState, end: NodeWorldState):number {
+    calculateHeuristic(start: GoalNode, end: GoalNode):number {
         return 0;
     }
-    markDirty(node:NodeWorldState): void {
+    markDirty(node:GoalNode): void {
         //throw new Error("Method not implemented.");
     }
     cleanDirty(): void {

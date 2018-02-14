@@ -1,7 +1,7 @@
-import { NodeWorldState } from "./world-state";
-import { IAction } from "./action";
+import { GoalNode } from "./goalnode";
+import { IAction } from "./action"; 
 
 interface IAgent{
-    goals:NodeWorldState[];//ordered 
+    goals:GoalNode[];//ordered 
     actions:IAction[];//ordered?
 }

@@ -1,6 +1,6 @@
 {
   "name": "new-astar",
-  "version": "0.0.1",
+  "version": "0.0.13",
   "description": "astar search algorithm lib in JavaScript in TS",
   "main": "output/index.js",
   "typings": "output/index.d.ts",
@@ -15,8 +15,11 @@
     "url": "https://github.com/bgrins/javascript-astar/issues"
   },
   "homepage": "http://bgrins.github.io/javascript-astar",
-  "dependencies": {},
+  "dependencies": {
+    "lodash": "^4.17.5"
+  },
   "devDependencies": {
+    "@types/lodash": "^4.14.102",
     "typescript": "^2.7.1"
   }
 }

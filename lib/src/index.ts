@@ -11,4 +11,5 @@ export * from "./grid/gridgraph";
 
 export * from "./goal/action";
 export {Planner} from "./goal/planner";
-export * from "./goal/world-state";
+export * from "./goal/goalnode";
+export * from "./goal/worldstate";
