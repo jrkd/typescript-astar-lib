@@ -1,4 +1,7 @@
+import { GoalNode } from "./goalnode";
+import { IAction } from "./action"; 
+
 interface IAgent{
-    goals:IGoal[];//ordered 
-    actions:IAction[];
+    goals:GoalNode[];//ordered 
+    actions:IAction[];//ordered?
 }

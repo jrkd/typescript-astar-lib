@@ -1,7 +1,7 @@
 import {GridNode} from "./gridnode";
-import {AStar} from "./astar"; 
-import { IGraph } from "./graph";
-import { GridEdge } from "./gridedge";
+import {AStar} from "./../astar"; 
+import { IGraph } from "./../graph";
+import { GridEdge } from "./../gridedge";
 
 // See list of heuristics: http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
 export var heuristics = {
@@ -20,7 +20,7 @@ export var heuristics = {
 };
 
 export class GridGraph implements IGraph{
-  
+
     edges: GridEdge[];
     nodes:GridNode[];
     diagonal:boolean;
@@ -119,8 +119,8 @@ export class GridGraph implements IGraph{
     
       return edges;
     }
-    neighbors(node:GridNode):GridNode[] {
-      return node.adjacentEdges.map(edge => edge.nextNode);
+    neighborEdges(node:GridNode):GridEdge[] {
+      return node.adjacentEdges;
     }
 
       cleanDirty():void {
@@ -142,5 +142,9 @@ export class GridGraph implements IGraph{
           graphString.push(rowDebug.join(" "));
         }
         return graphString.join("\n");
+      }
+
+      isAtGoal(currentNode:GridNode, goalNode:GridNode): boolean {
+        return currentNode.x == goalNode.x && currentNode.y == goalNode.y;
       }
 }
