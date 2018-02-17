@@ -51,13 +51,21 @@ $(function() {
     buyPizza.effects.moneyWithMe = 0;
     buyPizza.effects.hungry = false;
 
-    planner.edges = [moveToBank, buyPizza, takeMoneyFromBank];
+    let makeToastie:NodeAction = new NodeAction();
+    makeToastie.name = "Make Toastie";
+    makeToastie.cost = 100;
+    makeToastie.preconditions = new WorldState();
+    makeToastie.preconditions.numFoodRecipes = 1;
+    makeToastie.effects = new WorldState();
+    makeToastie.effects.hungry = false;
+
+    planner.edges = [moveToBank, buyPizza, takeMoneyFromBank, makeToastie];
 
     //setup current state
     let startState:WorldState = new WorldState();
     startState.hungry = true;
     startState.moneyWithMe = 0;
-    startState.numFoodRecipes = 0;
+    startState.numFoodRecipes = 1;
     startState.moneyAtBank = 100;
     startState.bankPosX = 100;
     startState.bankPosY = 100;

@@ -1,0 +1,26 @@
+notes 2 17/02/18
+
+add costs
+--------
+
+Primer:
+generally in A* you have 2 cost values -
+1. G or - how far away you are from the start
+2. H or - how close are you to the goal
+
+If you only set G, you always get best path, but slow speed wise as you methodically scan everything near the beginning, not missing any chances that could lead to a better path. 
+
+If you only set H, you can be very fast (if your guess at how close you are to the goal is good), but sometimes has terrible results. 
+
+Add both together (normalized) and you have a fast, and generally correct result. 
+
+I'll start with replicating dijkstra's here - as we dont care about performance yet, and a logical plan should generally choose the best decision every time? (also, not sure yet how to approximate how close you are to a goal via actions)
+
+Our guy's A* implementation already does G by adding the current to the next by way of current edge, so surely its just a case of setting the aciton costs.
+
+1507: Finishing up today: 
+--------------------
+We're setting costs, but its always choosing make toastie, even at cost 100. 
+I'm not understanding completely the concept of changing route based on previous cost, 
+I think this is where our issue is... we find a path to the goal, and then bail immediately, 
+rather than restructuring based on cost. 

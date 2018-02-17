@@ -16,5 +16,4 @@ export interface IGraphNode{
 
 
     toString():string;
-    getCost(fromNeighbor:IGraphNode):number;
 }

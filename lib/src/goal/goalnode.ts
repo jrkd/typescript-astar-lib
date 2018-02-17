@@ -18,8 +18,5 @@ export class GoalNode implements IGraphNode {
     toString(): string {
         return "";
     }
-    getCost(fromNeighbor: IGraphNode): number {
-        return 0;
-    }    
     
 }

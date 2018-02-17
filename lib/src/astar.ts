@@ -34,11 +34,6 @@ export class AStar{
       // Grab the lowest f(x) to process next.  Heap keeps this sorted for us.
       let currentNode:IGraphNode = openHeap.pop();
 
-      // End case -- result has been found, return the traced path.
-      if (graph.isAtGoal(currentNode, end))  {
-        return AStar.pathTo(start, currentNode);
-      }
-
       // Normal case -- move currentNode from open to closed, process each of its neighbors.
       currentNode.closed = true;
 
@@ -55,13 +50,21 @@ export class AStar{
 
         // The g score is the shortest distance from start to current node.
         // We need to check if the path we have arrived at this neighbor is the shortest one we have seen yet.
-        let gScore:number = currentNode.g + neighbor.getCost(currentNode);
+        let gScore:number = currentNode.g + neighborEdges[index].cost;
         let beenVisited:boolean = neighbor.visited;
 
         if (!beenVisited || gScore < neighbor.g) {
 
           // Found an optimal (so far) path to this node.  Take score for node to see how good it is.
           neighbor.visited = true;
+
+          //TODO: !! I think our problem is here, 
+          //not sure exactly why, but neighbor.parent = currentNode is quite 
+          //alot different to currentNode.selectedEdge
+          
+          //With .parent we're saying, hey neighbor, come through current
+          // with current.selectedEdge were saying hey current, lets go through neighbor.!
+
           //neighbor.parent = currentNode;
           currentNode.selectedEdge = neighborEdges[index];
           neighbor.h = neighbor.h || graph.calculateHeuristic(neighbor, end);
