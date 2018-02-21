@@ -6,8 +6,9 @@ export class GridEdge implements IGraphEdge {
     prevNode: GridNode;
     nextNode:GridNode;//ignoring this for now.
 
-    constructor(cost:number, nextNode:GridNode){
+    constructor(cost:number, prevNode:GridNode, nextNode:GridNode){
         this.cost = cost;
-        this.prevNode = nextNode;
+        this.prevNode = prevNode;
+        this.nextNode = nextNode;
     }
 }

@@ -77,43 +77,43 @@ export class GridGraph implements IGraph{
     
       // West
       if (grid[x - 1] && grid[x - 1][y]) {
-        edges.push(new GridEdge(grid[x - 1][y].weight, grid[x - 1][y]));
+        edges.push(new GridEdge(grid[x - 1][y].weight, node, grid[x - 1][y]));
       }
     
       // East
       if (grid[x + 1] && grid[x + 1][y]) {
-        edges.push(new GridEdge(grid[x + 1][y].weight, grid[x + 1][y]));
+        edges.push(new GridEdge(grid[x + 1][y].weight, node, grid[x + 1][y]));
       }
     
       // South
       if (grid[x] && grid[x][y - 1]) {
-        edges.push(new GridEdge(grid[x][y - 1].weight, grid[x][y - 1]));
+        edges.push(new GridEdge(grid[x][y - 1].weight, node, grid[x][y - 1]));
       }
     
       // North
       if (grid[x] && grid[x][y + 1]) {
-        edges.push(new GridEdge(grid[x][y + 1].weight, grid[x][y + 1]));
+        edges.push(new GridEdge(grid[x][y + 1].weight, node, grid[x][y + 1]));
       }
     
       if (this.diagonal) {
         // Southwest
         if (grid[x - 1] && grid[x - 1][y - 1]) {
-          edges.push(new GridEdge(grid[x - 1][y - 1].weight, grid[x - 1][y - 1]));
+          edges.push(new GridEdge(grid[x - 1][y - 1].weight, node, grid[x - 1][y - 1]));
         }
     
         // Southeast
         if (grid[x + 1] && grid[x + 1][y - 1]) {
-          edges.push(new GridEdge(grid[x + 1][y - 1].weight, grid[x + 1][y - 1]));
+          edges.push(new GridEdge(grid[x + 1][y - 1].weight, node, grid[x + 1][y - 1]));
         }
     
         // Northwest
         if (grid[x - 1] && grid[x - 1][y + 1]) {
-          edges.push(new GridEdge(grid[x - 1][y + 1].weight, grid[x - 1][y + 1]));
+          edges.push(new GridEdge(grid[x - 1][y + 1].weight, node, grid[x - 1][y + 1]));
         }
     
         // Northeast
         if (grid[x + 1] && grid[x + 1][y + 1]) {
-          edges.push(new GridEdge(grid[x + 1][y + 1].weight, grid[x + 1][y + 1]));
+          edges.push(new GridEdge(grid[x + 1][y + 1].weight, node, grid[x + 1][y + 1]));
         }
       }
     
