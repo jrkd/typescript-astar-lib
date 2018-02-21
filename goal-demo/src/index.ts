@@ -1,5 +1,6 @@
-import {AStar, GridGraph, Planner, WorldState, GoalNode, NodeAction} from "new-astar";
+import {AStar, GridGraph, Planner, WorldState, GoalNode, NodeAction, GoalEdge} from "new-astar";
 import * as $ from "jquery"; 
+import { IGraphEdge } from "../../lib/output/graphedge";
  
 /*  demo.js http://github.com/bgrins/javascript-astar
     MIT License
@@ -22,7 +23,7 @@ $(function() {
     //actions:
     let moveToBank:NodeAction = new NodeAction();
     moveToBank.name = "Move to bank";
-    moveToBank.cost = 1;
+    moveToBank.cost = 5;
     moveToBank.preconditions = new WorldState();
     moveToBank.preconditions.myPosX = 0;
     moveToBank.preconditions.myPosY = 0;
@@ -51,16 +52,42 @@ $(function() {
     buyPizza.effects.moneyWithMe = 0;
     buyPizza.effects.hungry = false;
 
-    planner.edges = [moveToBank, buyPizza, takeMoneyFromBank];
+    let makeToastie:NodeAction = new NodeAction();
+    makeToastie.name = "Make Toastie";
+    makeToastie.cost = 4;
+    makeToastie.preconditions = new WorldState();
+    makeToastie.preconditions.numFoodRecipes = 1;
+    makeToastie.preconditions.numCheese = 1;
+    makeToastie.preconditions.numBread = 2;
+    makeToastie.effects = new WorldState();
+    makeToastie.effects.hungry = false;
+
+    let getSliceOfBread:NodeAction = new NodeAction();
+    getSliceOfBread.name = "Get Slice of Bread";
+    getSliceOfBread.cost = 1;
+    getSliceOfBread.preconditions = new WorldState();
+    getSliceOfBread.effects = new WorldState();
+    getSliceOfBread.effects.numBread = 2;
+
+    let getCheese:NodeAction = new NodeAction();
+    getCheese.name = "Get cheese";
+    getCheese.cost = 1;
+    getCheese.preconditions = new WorldState();
+    getCheese.effects = new WorldState();
+    getCheese.effects.numCheese = 1;
+
+    planner.actions = [moveToBank, buyPizza, takeMoneyFromBank, makeToastie, getSliceOfBread, getCheese];
 
     //setup current state
     let startState:WorldState = new WorldState();
     startState.hungry = true;
     startState.moneyWithMe = 0;
-    startState.numFoodRecipes = 0;
+    startState.numFoodRecipes = 1;
     startState.moneyAtBank = 100;
     startState.bankPosX = 100;
     startState.bankPosY = 100;
+    startState.numBread = 0;
+    startState.numCheese = 0;
     startState.myPosX = 0;
     startState.myPosY = 0;
 
@@ -72,6 +99,8 @@ $(function() {
     let goalNode:GoalNode = new GoalNode();
     goalNode.state = goalState;
 
+    planner.preprocessGraph(startNode);
+
     let results = AStar.search(planner, startNode, goalNode, {});
   
     let currentNode:GoalNode = startNode;
@@ -79,9 +108,9 @@ $(function() {
     if(results.length == 0){
         $plannerResults.html("<h1>no plan available!</h1>");
     }
-    results.forEach((result:NodeAction) => {
-        currentNode = result.ActivateAction(currentNode);
-        $plannerResults.append("<li>"+result.name+"</li>");
+    results.forEach((result:GoalEdge) => {
+        currentNode = result.action.ActivateAction(currentNode);
+        $plannerResults.append("<li>"+result.action.name+"</li>");
     });
 
     $("#btnGenerate").click(function() {

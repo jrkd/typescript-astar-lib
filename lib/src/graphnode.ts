@@ -8,13 +8,14 @@ export interface IGraphNode{
     closed:boolean;
     
     
-    //parent:IGraphNode;
-    //if we're using edges properly, then parent doesnt exist
-    selectedEdge:IGraphEdge;
+
+
+    //Jono, thats not true! /This needs to be parentedge
+    parentEdge:IGraphEdge;
     
+
     adjacentEdges:IGraphEdge[];
 
 
     toString():string;
-    getCost(fromNeighbor:IGraphNode):number;
 }

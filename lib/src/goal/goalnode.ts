@@ -1,10 +1,10 @@
 import { IGraphNode } from "./../graphnode";
-import { NodeAction } from "./action";
+import { NodeAction, GoalEdge } from "./action";
 import { WorldState } from "./worldstate";
 
 export class GoalNode implements IGraphNode {
-    selectedEdge:NodeAction;
-    adjacentEdges: NodeAction[];
+    parentEdge:GoalEdge;
+    adjacentEdges: GoalEdge[];
     //from node interface
     visited: boolean = false;
     f: number = 0;
@@ -18,8 +18,5 @@ export class GoalNode implements IGraphNode {
     toString(): string {
         return "";
     }
-    getCost(fromNeighbor: IGraphNode): number {
-        return 0;
-    }    
     
 }

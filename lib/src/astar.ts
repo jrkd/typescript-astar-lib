@@ -43,7 +43,7 @@ export class AStar{
       currentNode.closed = true;
 
       // Find all neighbors for the current node.
-      let neighborEdges:IGraphEdge[] = graph.neighborEdges(currentNode);
+      let neighborEdges:IGraphEdge[] = currentNode.adjacentEdges;//graph.neighborEdges(currentNode);
 
       for(let index:number = 0; index < neighborEdges.length; ++index){
         let neighbor:IGraphNode = neighborEdges[index].nextNode;
@@ -55,15 +55,14 @@ export class AStar{
 
         // The g score is the shortest distance from start to current node.
         // We need to check if the path we have arrived at this neighbor is the shortest one we have seen yet.
-        let gScore:number = currentNode.g + neighbor.getCost(currentNode);
+        let gScore:number = currentNode.g + neighborEdges[index].cost;
         let beenVisited:boolean = neighbor.visited;
 
         if (!beenVisited || gScore < neighbor.g) {
 
           // Found an optimal (so far) path to this node.  Take score for node to see how good it is.
           neighbor.visited = true;
-          //neighbor.parent = currentNode;
-          currentNode.selectedEdge = neighborEdges[index];
+          neighbor.parentEdge = neighborEdges[index];
           neighbor.h = neighbor.h || graph.calculateHeuristic(neighbor, end);
           neighbor.g = gScore;
           neighbor.f = neighbor.g + neighbor.h;
@@ -101,17 +100,16 @@ export class AStar{
     node.h = 0;
     node.visited = false;
     node.closed = false;
-    //node.parent = null;
-    node.selectedEdge = null;
+    node.parentEdge = null;
   }
 
   static pathTo(startNode:IGraphNode, goalNode:IGraphNode):IGraphEdge[] {
-    let curr:IGraphNode = startNode;
+    let curr:IGraphNode = goalNode;
     let path:IGraphEdge[] = [];
-    while (curr.selectedEdge != null) {
-      path.push(curr.selectedEdge);
-      curr = curr.selectedEdge.nextNode;
+    while (curr.parentEdge != null) {
+      path.push(curr.parentEdge);
+      curr = curr.parentEdge.prevNode;
     }
-    return path;
+    return path.reverse();
   }
 }

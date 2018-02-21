@@ -1,4 +1,4 @@
-import {AStar, GridGraph} from "new-astar";
+import {AStar, GridGraph, IGraphNode} from "new-astar";
 import * as $ from "jquery"; 
 
 /*  demo.js http://github.com/bgrins/javascript-astar
@@ -152,9 +152,15 @@ GraphSearch.prototype.cellClicked = function($end) {
 
     var sTime = performance ? performance.now() : new Date().getTime();
 
-    var path = this.search(this.graph, start, end, {
+    var pathEdges = this.search(this.graph, start, end, {
         closest: this.opts.closest
     });
+
+    let path:IGraphNode[] = [];
+    for(let index:number = 0; index < pathEdges.length; ++index){
+        path.push(pathEdges[index].prevNode);
+    }
+
     var fTime = performance ? performance.now() : new Date().getTime(),
         duration = (fTime-sTime).toFixed(2);
 
