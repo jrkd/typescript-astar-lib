@@ -1,5 +1,6 @@
-import {AStar, GridGraph, Planner, WorldState, GoalNode, NodeAction} from "new-astar";
+import {AStar, GridGraph, Planner, WorldState, GoalNode, NodeAction, GoalEdge} from "new-astar";
 import * as $ from "jquery"; 
+import { IGraphEdge } from "../../lib/output/graphedge";
  
 /*  demo.js http://github.com/bgrins/javascript-astar
     MIT License
@@ -53,13 +54,13 @@ $(function() {
 
     let makeToastie:NodeAction = new NodeAction();
     makeToastie.name = "Make Toastie";
-    makeToastie.cost = 100;
+    makeToastie.cost = 4;
     makeToastie.preconditions = new WorldState();
     makeToastie.preconditions.numFoodRecipes = 1;
     makeToastie.effects = new WorldState();
     makeToastie.effects.hungry = false;
 
-    planner.edges = [moveToBank, buyPizza, takeMoneyFromBank, makeToastie];
+    planner.actions = [moveToBank, buyPizza, takeMoneyFromBank, makeToastie];
 
     //setup current state
     let startState:WorldState = new WorldState();
@@ -80,6 +81,8 @@ $(function() {
     let goalNode:GoalNode = new GoalNode();
     goalNode.state = goalState;
 
+    planner.preprocessGraph(startNode);
+
     let results = AStar.search(planner, startNode, goalNode, {});
   
     let currentNode:GoalNode = startNode;
@@ -87,9 +90,9 @@ $(function() {
     if(results.length == 0){
         $plannerResults.html("<h1>no plan available!</h1>");
     }
-    results.forEach((result:NodeAction) => {
-        currentNode = result.ActivateAction(currentNode);
-        $plannerResults.append("<li>"+result.name+"</li>");
+    results.forEach((result:GoalEdge) => {
+        currentNode = result.action.ActivateAction(currentNode);
+        $plannerResults.append("<li>"+result.action.name+"</li>");
     });
 
     $("#btnGenerate").click(function() {

@@ -34,11 +34,16 @@ export class AStar{
       // Grab the lowest f(x) to process next.  Heap keeps this sorted for us.
       let currentNode:IGraphNode = openHeap.pop();
 
+      // End case -- result has been found, return the traced path.
+      if (graph.isAtGoal(currentNode, end))  {
+        return AStar.pathTo(start, currentNode);
+      }
+
       // Normal case -- move currentNode from open to closed, process each of its neighbors.
       currentNode.closed = true;
 
       // Find all neighbors for the current node.
-      let neighborEdges:IGraphEdge[] = graph.neighborEdges(currentNode);
+      let neighborEdges:IGraphEdge[] = currentNode.adjacentEdges;//graph.neighborEdges(currentNode);
 
       for(let index:number = 0; index < neighborEdges.length; ++index){
         let neighbor:IGraphNode = neighborEdges[index].nextNode;
@@ -57,16 +62,7 @@ export class AStar{
 
           // Found an optimal (so far) path to this node.  Take score for node to see how good it is.
           neighbor.visited = true;
-
-          //TODO: !! I think our problem is here, 
-          //not sure exactly why, but neighbor.parent = currentNode is quite 
-          //alot different to currentNode.selectedEdge
-          
-          //With .parent we're saying, hey neighbor, come through current
-          // with current.selectedEdge were saying hey current, lets go through neighbor.!
-
-          //neighbor.parent = currentNode;
-          currentNode.selectedEdge = neighborEdges[index];
+          neighbor.parentEdge = neighborEdges[index];
           neighbor.h = neighbor.h || graph.calculateHeuristic(neighbor, end);
           neighbor.g = gScore;
           neighbor.f = neighbor.g + neighbor.h;
@@ -104,17 +100,16 @@ export class AStar{
     node.h = 0;
     node.visited = false;
     node.closed = false;
-    //node.parent = null;
-    node.selectedEdge = null;
+    node.parentEdge = null;
   }
 
   static pathTo(startNode:IGraphNode, goalNode:IGraphNode):IGraphEdge[] {
-    let curr:IGraphNode = startNode;
+    let curr:IGraphNode = goalNode;
     let path:IGraphEdge[] = [];
-    while (curr.selectedEdge != null) {
-      path.push(curr.selectedEdge);
-      curr = curr.selectedEdge.nextNode;
+    while (curr.parentEdge != null) {
+      path.push(curr.parentEdge);
+      curr = curr.parentEdge.prevNode;
     }
-    return path;
+    return path.reverse();
   }
 }

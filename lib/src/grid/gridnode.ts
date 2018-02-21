@@ -15,7 +15,7 @@ export class GridNode implements IGraphNode{
     closed:boolean;
     parent:GridNode;
     adjacentEdges:GridEdge[];
-    selectedEdge:GridEdge;
+    parentEdge:GridEdge;
 
     constructor(x:number, y:number, weight:number) {
         this.x = x;

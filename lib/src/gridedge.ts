@@ -3,11 +3,11 @@ import { GridNode } from ".";
 
 export class GridEdge implements IGraphEdge {
     cost: number;
-    nextNode: GridNode;
-    prevNode:GridNode;//ignoring this for now.
+    prevNode: GridNode;
+    nextNode:GridNode;//ignoring this for now.
 
     constructor(cost:number, nextNode:GridNode){
         this.cost = cost;
-        this.nextNode = nextNode;
+        this.prevNode = nextNode;
     }
 }
