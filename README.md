@@ -1,4 +1,4 @@
-# javascript-astar
+# typescript-astar-lib
 A* Search / Pathfinding Algorithm in Javascript
 Originally forked from bgrins/javascript-astar. 
 
