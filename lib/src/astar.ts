@@ -67,7 +67,7 @@ export class AStar{
           neighbor.g = gScore;
           neighbor.f = neighbor.g + neighbor.h;
           graph.markDirty(neighbor);
-          if (closest) {
+          if (true) {
             // If the neighbour is closer than the current closestNode or if it's equally close but has
             // a cheaper path than the current closest node then it becomes the closest node
             if (neighbor.h < closestNode.h || (neighbor.h === closestNode.h && neighbor.g < closestNode.g)) {

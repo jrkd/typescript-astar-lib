@@ -3,6 +3,7 @@ import * as _ from "lodash";
 import { IGraph } from "./../graph";
 import { GoalNode } from "./goalnode";
 import { IAction, NodeAction, GoalEdge } from "./action";
+import { AStar } from "../astar";
 
 export class Planner implements IGraph {
     
@@ -10,7 +11,10 @@ export class Planner implements IGraph {
     nodes:GoalNode[] = [];
     dirtyNodes:GoalNode[] = [];
     init(): void {
-        //nothin
+        this.dirtyNodes = [];
+        for (var i = 0; i < this.nodes.length; i++) {
+            AStar.cleanNode(this.nodes[i]);
+        }
     }
 
     neighborEdges(node:GoalNode): GoalEdge[] {
@@ -52,13 +56,17 @@ export class Planner implements IGraph {
     }
 
     calculateHeuristic(start: GoalNode, end: GoalNode):number {
-        return 0;
+        //Not sure if this is really helping.
+        return _.differenceWith(Object.keys(start.state), Object.keys(end.state)).length;
     }
     markDirty(node:GoalNode): void {
-        //throw new Error("Method not implemented.");
+        this.dirtyNodes.push(node);
     }
     cleanDirty(): void {
-        //throw new Error("Method not implemented.");
+        for (var i = 0; i < this.dirtyNodes.length; i++) {
+            AStar.cleanNode(this.dirtyNodes[i]);
+          }
+          this.dirtyNodes = [];
     }
     toString(): string {
         return "";

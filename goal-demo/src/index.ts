@@ -62,8 +62,6 @@ function setupActions():NodeAction[] {
     moveToBank.name = "Move to bank";
     moveToBank.cost = 1;
     moveToBank.preconditions = new WorldState();
-    moveToBank.preconditions.myPosX = 0;
-    moveToBank.preconditions.myPosY = 0;
     moveToBank.effects = new WorldState();
     moveToBank.effects.myPosX = 5;
     moveToBank.effects.myPosY = 5;
