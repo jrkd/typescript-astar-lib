@@ -106,13 +106,16 @@ function setupActions():NodeAction[] {
     makeToastie.preconditions.numBread = 2;
     makeToastie.effects = new WorldState();
     makeToastie.effects.hungry = false;
+    makeToastie.effects.numToastie = 1;
+    makeToastie.effects.numCheese = -1;
+    makeToastie.effects.numBread = -1;
 
     let getSliceOfBread: NodeAction = new NodeAction();
     getSliceOfBread.name = "Get Slice of Bread";
     getSliceOfBread.cost = 1;
     getSliceOfBread.preconditions = new WorldState();
     getSliceOfBread.effects = new WorldState();
-    getSliceOfBread.effects.numBread = 2;
+    getSliceOfBread.effects.numBread = 1;
 
     let getCheese: NodeAction = new NodeAction();
     getCheese.name = "Get cheese";
@@ -120,7 +123,7 @@ function setupActions():NodeAction[] {
     getCheese.preconditions = new WorldState();
     getCheese.effects = new WorldState();
     getCheese.effects.numCheese = 1;
-    return [ moveToBank, buyPizza, workAJob, takeMoneyFromBank, makeToastie, getSliceOfBread, getCheese ];
+    return [ moveToBank, buyPizza, takeMoneyFromBank, makeToastie, getSliceOfBread, getCheese ];
 }
 
 function renderActions(actions:NodeAction[]){

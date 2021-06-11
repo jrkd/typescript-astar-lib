@@ -13,6 +13,9 @@ export class WorldState{
     recipePosY:number;
     bankPosX:number;
     bankPosY:number;
+    numBread:number;
+    numCheese:number;
+    numToastie:number;
 
         // This works as a test for both 
     //1. all precondition props exist
@@ -48,10 +51,23 @@ export class WorldState{
 
         //Check that all our keys exist in the fullState, 
         //and the values for ours match the fullstates version of them.
-        return ourKeys.every(key => fullState[key] === this[key]);
+        return ourKeys.every(key => {
+            if(key.startsWith("total") || key.startsWith("num") || key.startsWith("money")){
+                return fullState[key] >= this[key]; 
+            } 
+            return fullState[key] === this[key];
+        });
     } 
 
     applyTo(fullState:WorldState):WorldState{
-        return _.merge(_.cloneDeep(fullState), this);
+        return _.mergeWith(_.cloneDeep(fullState), this, (objValue, srcValue, key, object, source, stack)=>{
+            if(key.startsWith("total") || key.startsWith("num") || key.startsWith("money")){
+                if(_.isNumber(objValue) && _.isNumber(srcValue)){
+                    return Math.min(objValue + srcValue, 100);
+                }
+            }
+            return undefined;
+        });
+        //return _.merge(_.cloneDeep(fullState), this);
     }
 }
