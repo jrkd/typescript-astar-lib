@@ -60,23 +60,23 @@ function runSearch() {
 function setupActions():NodeAction[] {
     let moveToBank: NodeAction = new NodeAction();
     moveToBank.name = "Move to bank";
-    moveToBank.cost = 5;
+    moveToBank.cost = 1;
     moveToBank.preconditions = new WorldState();
     moveToBank.preconditions.myPosX = 0;
     moveToBank.preconditions.myPosY = 0;
     moveToBank.effects = new WorldState();
-    moveToBank.effects.myPosX = 100;
-    moveToBank.effects.myPosY = 100;
+    moveToBank.effects.myPosX = 5;
+    moveToBank.effects.myPosY = 5;
 
     let takeMoneyFromBank: NodeAction = new NodeAction();
     takeMoneyFromBank.name = "Take money from bank";
     takeMoneyFromBank.cost = 1;
     takeMoneyFromBank.preconditions = new WorldState();
-    takeMoneyFromBank.preconditions.myPosX = 100;
-    takeMoneyFromBank.preconditions.myPosY = 100;
-    takeMoneyFromBank.preconditions.moneyAtBank = 100;
+    takeMoneyFromBank.preconditions.myPosX = 5;
+    takeMoneyFromBank.preconditions.myPosY = 5;
+    takeMoneyFromBank.preconditions.moneyAtBank = 5;
     takeMoneyFromBank.effects = new WorldState();
-    takeMoneyFromBank.effects.moneyWithMe = 100;
+    takeMoneyFromBank.effects.moneyWithMe = 5;
     takeMoneyFromBank.effects.moneyAtBank = 0;
 
     let workAJob: NodeAction = new NodeAction();
@@ -84,22 +84,31 @@ function setupActions():NodeAction[] {
     workAJob.cost = 1;
     workAJob.preconditions = new WorldState();
     workAJob.effects = new WorldState();
-    workAJob.effects.moneyAtBank = 100;
+    workAJob.effects.moneyAtBank = 5;
     
 
     let buyPizza: NodeAction = new NodeAction();
-    buyPizza.name = "Buy pizza";
+    buyPizza.name = "Eat pizza";
     buyPizza.cost = 1;
     buyPizza.preconditions = new WorldState();
     buyPizza.preconditions.hungry = true;
-    buyPizza.preconditions.moneyWithMe = 100;
+    buyPizza.preconditions.moneyWithMe = 5;
     buyPizza.effects = new WorldState();
     buyPizza.effects.moneyWithMe = 0;
     buyPizza.effects.hungry = false;
+    buyPizza.effects.isRelaxed = true;
+
+    let learnToMakeBestToastie: NodeAction = new NodeAction();
+    learnToMakeBestToastie.name = "Have a revelation - i know how to make the worlds best toastie";
+    learnToMakeBestToastie.cost = 1;
+    learnToMakeBestToastie.preconditions = new WorldState();
+    learnToMakeBestToastie.preconditions.isRelaxed = true;
+    learnToMakeBestToastie.effects = new WorldState();
+    learnToMakeBestToastie.effects.numFoodRecipes = 1;
 
     let makeToastie: NodeAction = new NodeAction();
     makeToastie.name = "Make Toastie";
-    makeToastie.cost = 4;
+    makeToastie.cost = 1;
     makeToastie.preconditions = new WorldState();
     makeToastie.preconditions.numFoodRecipes = 1;
     makeToastie.preconditions.numCheese = 1;
@@ -109,6 +118,14 @@ function setupActions():NodeAction[] {
     makeToastie.effects.numToastie = 1;
     makeToastie.effects.numCheese = -1;
     makeToastie.effects.numBread = -1;
+
+    let serveCustomers: NodeAction = new NodeAction();
+    serveCustomers.name = "Serve customers";
+    serveCustomers.cost = 1;
+    serveCustomers.preconditions = new WorldState();
+    serveCustomers.preconditions.numToastie = 6;
+    serveCustomers.effects = new WorldState();
+    serveCustomers.effects.customersServed = true;
 
     let getSliceOfBread: NodeAction = new NodeAction();
     getSliceOfBread.name = "Get Slice of Bread";
@@ -123,7 +140,7 @@ function setupActions():NodeAction[] {
     getCheese.preconditions = new WorldState();
     getCheese.effects = new WorldState();
     getCheese.effects.numCheese = 1;
-    return [ moveToBank, buyPizza, takeMoneyFromBank, makeToastie, getSliceOfBread, getCheese ];
+    return [ workAJob, moveToBank, getSliceOfBread, getCheese, buyPizza, learnToMakeBestToastie , serveCustomers, takeMoneyFromBank, makeToastie ];
 }
 
 function renderActions(actions:NodeAction[]){

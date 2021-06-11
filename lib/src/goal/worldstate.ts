@@ -16,6 +16,8 @@ export class WorldState{
     numBread:number;
     numCheese:number;
     numToastie:number;
+    customersServed:boolean;
+    isRelaxed:boolean;
 
         // This works as a test for both 
     //1. all precondition props exist
@@ -63,7 +65,7 @@ export class WorldState{
         return _.mergeWith(_.cloneDeep(fullState), this, (objValue, srcValue, key, object, source, stack)=>{
             if(key.startsWith("total") || key.startsWith("num") || key.startsWith("money")){
                 if(_.isNumber(objValue) && _.isNumber(srcValue)){
-                    return Math.min(objValue + srcValue, 100);
+                    return Math.min(objValue + srcValue, 10);
                 }
             }
             return undefined;
