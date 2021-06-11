@@ -13,28 +13,55 @@
             <a class='btn' href='http://github.com/bgrins/javascript-astar'>Github</a> 
             <a class='btn' href='http://www.briangrinstead.com/blog/astar-search-algorithm-in-javascript-updated'>Article</a>
         </div>
-        <div class="links">
-            <a href='../'>Home</a> |
-            <a href='../demo/'>Demo</a> |
-            <a href='../test/'>Tests</a> |
-            <a href='../benchmark/'>Benchmark</a>
-        </div>
 	</div>
 
 	<div id="content">
 		<h2>Demonstration</h2>
+		<input type="button" value="run search" class="run-search" />
+		<h3>Current state of the world</h3>
+		<textarea class="initial-worldstate">
+			{
+				"hungry": true,
+    			"moneyWithMe": 0,
+    			"numFoodRecipes": 1,
+    			"moneyAtBank": 100,
+    			"bankPosX": 100,
+    			"bankPosY": 100,
+    			"numBread": 0,
+    			"numCheese": 0,
+    			"myPosX": 0,
+    			"myPosY": 0
+			}
+		</textarea>
 
-		<h3>Initial Worldstate</h3>
+		<h3>Goal state of the world</h3>
+		<textarea class="goal-worldstate">
+			{
+				"hungry": false
+			}
+		</textarea>
+
+		<h3>Actions</h3>
+		<ul class="action-list"></ul>
+		<script type="text/template" class="action-item-template">
+			<li>
+				<p>{{name}}</p> 
+				<p>Cost: {{cost}}</p>
+				<p>Preconditions: <br>{{preconditions}}</p>
+				<p>Effects: <br>{{effects}}</p>
+			</li>
+		</script>
 		<form></form>
+		<br>
 
-		<h3>Planxx List</h3>
+		<h3>Plan List</h3>
 		<ul id="plannerList"></ul>
 
 	</div>
 	<div id="footer"></div>
 
 	<script type='text/javascript' src='jquery-1.7.1.min.js'></script>
-	<script type='text/javascript' src='/output/compiled.js'></script>
+	<script type='text/javascript' src='/goal-demo/output/compiled.js'></script>
 	<!--<script type='text/javascript' src='../dist/astar-concat.js'></script>-->
 	<!-- <script type='text/javascript' src='demo.js'></script> -->
 </body>

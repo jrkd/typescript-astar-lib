@@ -9,13 +9,15 @@
             "type": "chrome",
             "request": "launch",
             "name": "Launch with chrome",
-            "url": "http://localhost",
+            "url": "http://localhost:81/goal-demo",
             "webRoot": "${workspaceRoot}",
             "sourceMaps": true,
             "trace": true,
+            "preLaunchTask": "build",
             "sourceMapPathOverrides": {
                 "webpack:///./*": "${webRoot}/*"
-            }
+            },
+            "runtimeExecutable": "C:/Program Files/Chromium/Application/chrome.exe"
         }
     ]
 }

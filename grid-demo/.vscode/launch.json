@@ -15,7 +15,8 @@
             "trace": true,
             "sourceMapPathOverrides": {
                 "webpack:///./*": "${webRoot}/*"
-            }
+            }, 
+            "runtimeExecutable": "C:/Program Files/Chromium/Application/chrome.exe"
         }
     ]
 }
