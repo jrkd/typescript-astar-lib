@@ -1,6 +1,12 @@
 import {AStar, GridGraph, Planner, WorldState, GoalNode, NodeAction, GoalEdge} from "new-astar";
 import * as $ from "jquery"; 
 import { IGraphEdge } from "../../lib/output/graphedge";
+declare var require: any;
+
+const JSONFormatter = require('json-formatter-js');
+const JSONEditor = require('jsoneditor');
+
+
  
 /*  demo.js http://github.com/bgrins/javascript-astar
     MIT License
@@ -9,8 +15,62 @@ import { IGraphEdge } from "../../lib/output/graphedge";
 */
 /* global Graph, astar, $ */
 
+var actions: NodeAction[];
+let jsonFormatterOptions = {
+    hoverPreviewEnabled: false,
+    hoverPreviewArrayCount: 100,
+    hoverPreviewFieldCount: 5,
+    theme: '',
+    animateOpen: true,
+    animateClose: true,
+    useToJSON: true
+};
+
+let initialStateJSON = {
+    "hungry": true,
+    "moneyWithMe": 0,
+    "numFoodRecipes": 0,
+    "moneyAtBank": 5,
+    "bankPosX": 5,
+    "bankPosY": 5,
+    "numBread": 0,
+    "numCheese": 0,
+    "myPosX": 0,
+    "myPosY": 0
+};
+
+const editableOptions = { 
+    "search": false,
+    "mainMenuBar": false,
+    "navigationBar": false, 
+    "limitDragging": true,
+    "onCreateMenu": (items) =>{
+      return items.filter( (el) => {
+        return el.text == "Append" || el.text == "Remove"
+      }).map((el) => { delete el.submenu;return el;});
+    }
+  };
+
+let goalStateJSON = {
+    "customersServed": true
+};    
 
 $(function() {
+    const intitialWorldStateEditor = new JSONEditor($(".initial-world-state")[0], $.extend(editableOptions,{"name":"Initial world state"}));
+    intitialWorldStateEditor.set(initialStateJSON);
+
+    const goalWorldStateEditor = new JSONEditor($(".goal-world-state")[0], $.extend(editableOptions,{"name":"Goal world state"}));
+    goalWorldStateEditor.set(goalStateJSON);
+    // $(".initial-world-state").append(new JSONFormatter(initialStateJSON, 1, jsonFormatterOptions).render());
+    // $(".goal-world-state").append(new JSONFormatter(goalStateJSON, 1, jsonFormatterOptions).render());
+
+    //setup the actions we can use. 
+    //planner.nodes -- we dont really have a full list of them right? cause each action just tweaks them?...
+    //suppose you could make things quick by pre-processing?
+    //actions:
+    actions = setupActions();
+    renderActions(actions);
+
     $(".run-search").click(()=>{
         runSearch();
     });
@@ -21,21 +81,14 @@ function runSearch() {
     $plannerResults.empty();
     var planner = new Planner();
 
-    //setup the actions we can use. 
-    //planner.nodes -- we dont really have a full list of them right? cause each action just tweaks them?...
-    //suppose you could make things quick by pre-processing?
-    //actions:
-    let actions: NodeAction[] = setupActions();
-    renderActions(actions);
-
     planner.actions = actions;
 
     //setup current state
     let startState: WorldState = new WorldState();
-    $.extend(startState, retrieveWorldState($(".initial-worldstate"))); //new WorldState();
+    $.extend(startState, initialStateJSON);
 
     let goalState: WorldState = new WorldState();
-    $.extend(goalState, retrieveWorldState($(".goal-worldstate")));
+    $.extend(goalState, goalStateJSON);
 
     let startNode: GoalNode = new GoalNode();
     startNode.state = startState;
@@ -46,15 +99,12 @@ function runSearch() {
 
     let results = AStar.search(planner, startNode, goalNode, {});
 
-    let currentNode: GoalNode = startNode;
+    
 
     if (results.length == 0) {
         $plannerResults.html("<h1>no plan available!</h1>");
     }
-    results.forEach((result: GoalEdge) => {
-        currentNode = result.action.ActivateAction(currentNode);
-        $plannerResults.append("<li>" + result.action.name + "</li>");
-    });
+    renderPlan(startNode, results);
 }
 
 function setupActions():NodeAction[] {
@@ -145,18 +195,61 @@ function renderActions(actions:NodeAction[]){
     const $actionList = $(".action-list");
 
     let resultList = "";
-    actions.forEach((action:NodeAction) => {
+    actions.forEach((action:NodeAction, index) => {
         let actionHtml = $(".action-item-template").html();
-        actionHtml = actionHtml.replace("{{name}}", action.name);
-        actionHtml = actionHtml.replace("{{cost}}", action.cost.toString());
-        actionHtml = actionHtml.replace("{{preconditions}}", JSON.stringify( action.preconditions ) );
-        actionHtml = actionHtml.replace("{{effects}}", JSON.stringify( action.effects ) );
+        actionHtml = actionHtml.split("{{index}}").join(index.toString());
+        actionHtml = actionHtml.split("{{name}}").join(action.name);
+        actionHtml = actionHtml.split("{{cost}}").join(action.cost.toString());
+
+        let preconditionsFormatted = $(new JSONFormatter(action.preconditions, 1, jsonFormatterOptions).render()).html();
+        actionHtml = actionHtml.split("{{preconditions}}").join( preconditionsFormatted );
+
+        let effectsFormatted = $(new JSONFormatter(action.effects, 1, jsonFormatterOptions).render()).html();
+        actionHtml = actionHtml.split("{{effects}}").join( effectsFormatted );
 
         resultList += actionHtml;
     });
     $actionList.empty();
     $actionList.append(resultList);
 }
+
+function renderPlan(startNode:GoalNode, results:IGraphEdge[]){
+    let $planActionList = $("#plannerList");
+    let $planActionDetailList = $("#plannerDetailList");
+    
+    let currentNode: GoalNode = startNode;
+
+    let resultPlanActions:string = "";
+    let resultPlanActionDetails:string = "";
+    results.forEach((result: GoalEdge, index:number) => {
+        
+        let planActionHtml = $("#plan-item-template").html();
+        let planActionDetailHtml = $(".plan-item-detail-template").html();
+
+        planActionHtml = planActionHtml.split("{{index}}").join(index.toString());
+        planActionHtml = planActionHtml.split("{{actionName}}").join(result.action.name);
+        resultPlanActions += planActionHtml;
+
+        currentNode = result.action.ActivateAction(currentNode);
+
+        planActionDetailHtml = planActionDetailHtml.split("{{index}}").join(index.toString());
+        planActionDetailHtml = planActionDetailHtml.split("{{actionName}}").join(result.action.name);
+
+        let actionEffectsFormatted = $(new JSONFormatter(result.action.effects, 1, jsonFormatterOptions).render()).html();
+        planActionDetailHtml = planActionDetailHtml.split("{{actionEffects}}").join(actionEffectsFormatted);
+
+        let actionDetailFormatted = $(new JSONFormatter(currentNode.state, 1, jsonFormatterOptions).render()).html();
+        planActionDetailHtml = planActionDetailHtml.split("{{changedState}}").join(actionDetailFormatted);
+        resultPlanActionDetails += planActionDetailHtml;
+    });
+
+    $planActionList.empty();
+    $planActionList.append(resultPlanActions);
+
+    $planActionDetailList.empty();
+    $planActionDetailList.append(resultPlanActionDetails);
+}
+
 
 function retrieveWorldState($element):WorldState{
     let jsonObj:WorldState = JSON.parse($element.val());

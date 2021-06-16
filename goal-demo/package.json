@@ -15,7 +15,10 @@
     "url": "https://github.com/bgrins/javascript-astar/issues"
   },
   "homepage": "http://bgrins.github.io/javascript-astar",
-  "dependencies": {},
+  "dependencies": {
+    "json-formatter-js": "^2.3.4",
+    "jsoneditor": "^9.5.0"
+  },
   "devDependencies": {
     "new-astar": "file:///../lib",
     "ts-loader": "^3.5.0",

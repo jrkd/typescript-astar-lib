@@ -4,63 +4,133 @@
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
         <title>Demo - JavaScript A* Search Algorithm</title>
+		<link href="https://getbootstrap.com/docs/5.0/dist/css/bootstrap.min.css" rel="stylesheet" >
+		<link rel="stylesheet" type="text/css" media="screen, projection" href="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.5.0/jsoneditor.css" />
 		<link rel="stylesheet" type="text/css" media="screen, projection" href="demo.css" />
 	</head>
 <body>
-	<div id="header"> 
-        <h1>javascript-astar</h1>
-        <div class='buttons'>
-            <a class='btn' href='http://github.com/bgrins/javascript-astar'>Github</a> 
-            <a class='btn' href='http://www.briangrinstead.com/blog/astar-search-algorithm-in-javascript-updated'>Article</a>
-        </div>
+	<div class="page-body pb-5">
+		<nav class="navbar navbar-expand-lg navbar-light bg-light">
+			<div class="container-fluid">
+				<a class="navbar-brand" href="#">javascript-astar</a>
+				<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+				</button>
+				<div class="collapse navbar-collapse" id="navbarSupportedContent">
+				<ul class="navbar-nav me-auto mb-2 mb-lg-0">
+					<li class="nav-item">
+					<a class="nav-link active" aria-current="page" href="/index.html">Home</a>
+					</li>
+					<li class="nav-item">
+					<a class="nav-link" href="http://www.briangrinstead.com/blog/astar-search-algorithm-in-javascript-updated" tabindex="-1">Article</a>
+					</li>
+					<li class="nav-item">
+					<a class="nav-link" href="http://github.com/bgrins/javascript-astar" tabindex="-1">Github</a>
+					</li>
+				</ul>
+				</div>
+			</div>
+		</nav>
+		<div class="container">
+			<div class="row">
+				<div class="col-6">
+					<h2>Demonstration</h2> 
+					
+					<div class="row">
+						<div class="col-6">
+							<h4>Current state of the world</h4>
+							<div class="form-control form-control-sm initial-world-state"></div>
+						</div>
+						<div class="col-6">
+							<h4>Goal state of the world</h4>
+							<div  class="form-control form-control-sm goal-world-state"></div>
+						</div>
+					</div>
+
+				</div>
+				<div class="col-6">
+					<h4>Actions</h4>
+					<div class="accordion action-list" id="actionsAccordion">
+						<script type="text/template" class="action-item-template">
+							<div class="accordion-item">
+								<h2 class="accordion-header" id="heading{{index}}">
+								  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{index}}" aria-expanded="true" aria-controls="collapse{{index}}">
+									<div class="form-check form-switch">
+										<input class="form-check-input" checked type="checkbox" id="flexSwitchCheckDefault">
+										<label class="form-check-label" for="flexSwitchCheckDefault">{{name}} </label>
+									  </div>  
+									
+								  </button>
+								</h2>
+								<div id="collapse{{index}}" class="accordion-collapse collapse" aria-labelledby="heading{{index}}" data-bs-parent="#actionsAccordion">
+								  <div class="accordion-body">
+									<p>Cost: {{cost}}</p>
+									<div class="row">
+										<div class="col-6">
+										  <h4>Preconditions</h4>
+										  {{preconditions}}
+										  <!-- <textarea class="form-control form-control-sm" rows="3"></textarea> -->
+										</div>
+										<div class="col-6">
+										  <h4>Effects</h4>
+										  {{effects}}
+										  <!-- <textarea class="form-control form-control-sm" rows="3"></textarea> -->
+										</div>
+									</div>
+								  </div>
+								</div>
+							  </div>
+						</script>
+					  </div>
+				</div>
+			</div>
+		</div>
+		<div class="container">
+			<div class="row">
+				<div class="col-12">
+					<h3>Plan of action <button type="button" class="btn btn-outline-primary btn-lg run-search" >Find a plan</button></h3>
+					<p>This is the series of actions we'd take to get from the initial state of the world to the desired goal.</p>
+					
+				</div>
+			</div>
+			<div class="row m-2" >
+				<div class="col-4">
+					<div class="list-group list-group-numbered overflow-auto" id="plannerList" role="tablist" style="max-height: 280px;">
+						
+					</div>
+					<script type="text/template" id="plan-item-template">
+						<a class="list-group-item list-group-item-action" id="list-{{index}}-list" data-bs-toggle="list" href="#list-{{index}}" role="tab" aria-controls="list-{{index}}">{{index}}. {{actionName}}</a>
+					</script>
+				</div>
+				<div class="col-8">
+					<div class="tab-content" id="plannerDetailList">
+						
+					</div>
+					<script type="text/template" class="plan-item-detail-template">
+						<div class="tab-pane fade" id="list-{{index}}" role="tabpanel" aria-labelledby="list-{{index}}-list">
+							<h5>Using action <span class="mark">{{actionName}}</span></h5>
+							<div class="row">
+								<div class="col-6">
+									<p>Applying the following effects to the world:</p>
+									{{actionEffects}}
+								</div>
+								<div class="col-6">
+									<p>The state of the world after doing this action:</p>
+									{{changedState}}
+								</div>
+							</div>
+
+
+							<!-- <textarea class="form-control form-control-sm disabled" disabled="disabled" rows="15"></textarea> -->
+						</div>
+					</script>
+				</div>
+			</div>
+		</div>
 	</div>
-
-	<div id="content">
-		<h2>Demonstration</h2>
-		<input type="button" value="run search" class="run-search" />
-		<h3>Current state of the world</h3>
-		<textarea class="initial-worldstate">
-			{
-				"hungry": true,
-    			"moneyWithMe": 0,
-    			"numFoodRecipes": 0,
-    			"moneyAtBank": 5,
-    			"bankPosX": 5,
-    			"bankPosY": 5,
-    			"numBread": 0,
-    			"numCheese": 0,
-    			"myPosX": 0,
-    			"myPosY": 0
-			}
-		</textarea>
-
-		<h3>Goal state of the world</h3>
-		<textarea class="goal-worldstate">
-			{
-				"customersServed": true
-			}
-		</textarea>
-
-		<h3>Actions</h3>
-		<ul class="action-list"></ul>
-		<script type="text/template" class="action-item-template">
-			<li>
-				<p>{{name}}</p> 
-				<p>Cost: {{cost}}</p>
-				<p>Preconditions: <br>{{preconditions}}</p>
-				<p>Effects: <br>{{effects}}</p>
-			</li>
-		</script>
-		<form></form>
-		<br>
-
-		<h3>Plan List</h3>
-		<ul id="plannerList"></ul>
-
-	</div>
-	<div id="footer"></div>
 
 	<script type='text/javascript' src='jquery-1.7.1.min.js'></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>
 	<script type='text/javascript' src='/goal-demo/output/compiled.js'></script>
 	<!--<script type='text/javascript' src='../dist/astar-concat.js'></script>-->
 	<!-- <script type='text/javascript' src='demo.js'></script> -->

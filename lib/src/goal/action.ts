@@ -50,7 +50,8 @@ export class NodeAction implements IAction {
         return true; //check precondition against current world state
     }
     ActivateAction(current:GoalNode):GoalNode {
-        return current;
-        //current += this.effects; apply effects to world state.
+        let node:GoalNode = new GoalNode();
+        node.state = this.effects.applyTo(current.state); 
+        return node;
     }
 }
