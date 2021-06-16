@@ -74,13 +74,17 @@ $(function() {
     actions = setupActions();
     renderActions(actions);
 
+    
     $(".run-search").click(()=>{
         updateDataFromPage();
         runSearch();
     });
     $("#addAction").click(()=>{
         addEmptyAction(); 
-    })
+    });
+    $('body').on('click', '.delete-action',(e)=>{
+        $(e.currentTarget).closest(".accordion-item").remove();
+    });
 });
 
 function updateDataFromPage(){
@@ -96,8 +100,8 @@ function updateDataFromPage(){
         let actionJSONEditorPreConditions = $(element).data("json-editor-preconditions");
         let actionJSONEditorEffects = $(element).data("json-editor-effects");
         let newAction: NodeAction = new NodeAction();
-        newAction.name = $actionElement.find("input[name='action-name"+index+"']").val().toString();
-        newAction.cost = 1;
+        newAction.name = $actionElement.find("input.action-name").val().toString();
+        newAction.cost = parseInt($actionElement.find("input.action-cost").val().toString());
 
         let preconditionsJSON = actionJSONEditorPreConditions.get();
         newAction.preconditions = $.extend(new WorldState(), preconditionsJSON);
@@ -230,7 +234,7 @@ function renderActions(actions:NodeAction[]){
     const $actionList = $(".action-list");
     $actionList.empty();
     actions.forEach((action:NodeAction) => {
-        addActionToHTML(action.name, 1, action.preconditions, action.effects);
+        addActionToHTML(action.name, action.cost, action.preconditions, action.effects);
     });
 }
 

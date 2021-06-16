@@ -58,14 +58,18 @@
 							  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{index}}" aria-expanded="true" aria-controls="collapse{{index}}">
 								<div class="form-check form-switch" style="width: 90%;">
 									<input class="form-check-input" checked type="checkbox" id="flexSwitchCheck{{index}}">
-									<input type="text" class="form-control form-input" value="{{name}}" name="action-name{{index}}" for="flexSwitchCheck{{index}}"></input>
+									<input type="text" class="form-control form-input action-name" value="{{name}}" name="action-name{{index}}" for="flexSwitchCheck{{index}}"></input>
 								  </div>  
 								
 							  </button>
 							</h2>
 							<div id="collapse{{index}}" class="accordion-collapse collapse" aria-labelledby="heading{{index}}" data-bs-parent="#actionsAccordion">
 							  <div class="accordion-body">
-								<p>Cost: {{cost}}</p>
+								  <div class="row align-items-center">
+									  <div class="col-2">Cost: <input type="text" value="{{cost}}" class="form-control action-cost" /></div>
+									  <div class="offset-7 col-3"><button type="button" class="btn btn-outline delete-action" >Delete</button></div>
+								  </div>
+						
 								<div class="row">
 									<div class="col-6">
 									  <h4>Preconditions</h4>
