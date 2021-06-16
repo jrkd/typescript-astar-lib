@@ -15,7 +15,7 @@ const JSONEditor = require('jsoneditor');
 */
 /* global Graph, astar, $ */
 
-var actions: NodeAction[];
+
 let jsonFormatterOptions = {
     hoverPreviewEnabled: false,
     hoverPreviewArrayCount: 100,
@@ -51,15 +51,18 @@ const editableOptions = {
     }
   };
 
+  var actions: NodeAction[];
+let intitialWorldStateEditor, goalWorldStateEditor;
+
 let goalStateJSON = {
     "customersServed": true
 };    
 
 $(function() {
-    const intitialWorldStateEditor = new JSONEditor($(".initial-world-state")[0], $.extend(editableOptions,{"name":"Initial world state"}));
+    intitialWorldStateEditor = new JSONEditor($(".initial-world-state")[0], $.extend(editableOptions,{"name":"Initial world state"}));
     intitialWorldStateEditor.set(initialStateJSON);
 
-    const goalWorldStateEditor = new JSONEditor($(".goal-world-state")[0], $.extend(editableOptions,{"name":"Goal world state"}));
+    goalWorldStateEditor = new JSONEditor($(".goal-world-state")[0], $.extend(editableOptions,{"name":"Goal world state"}));
     goalWorldStateEditor.set(goalStateJSON);
     // $(".initial-world-state").append(new JSONFormatter(initialStateJSON, 1, jsonFormatterOptions).render());
     // $(".goal-world-state").append(new JSONFormatter(goalStateJSON, 1, jsonFormatterOptions).render());
@@ -72,11 +75,43 @@ $(function() {
     renderActions(actions);
 
     $(".run-search").click(()=>{
+        updateDataFromPage();
         runSearch();
     });
+    $("#addAction").click(()=>{
+        addEmptyAction(); 
+    })
 });
 
+function updateDataFromPage(){
+    //set initial and goal state based on current 
+    initialStateJSON = intitialWorldStateEditor.get();
+    goalStateJSON = goalWorldStateEditor.get();
+
+    actions = [];
+    $(".action-list").children()
+    .filter((index,child) => $(child).find(".form-check-input").is(":checked"))
+    .each((index:number, element:HTMLElement) => {
+        let $actionElement = $(element);
+        let actionJSONEditorPreConditions = $(element).data("json-editor-preconditions");
+        let actionJSONEditorEffects = $(element).data("json-editor-effects");
+        let newAction: NodeAction = new NodeAction();
+        newAction.name = $actionElement.find("input[name='action-name"+index+"']").val().toString();
+        newAction.cost = 1;
+
+        let preconditionsJSON = actionJSONEditorPreConditions.get();
+        newAction.preconditions = $.extend(new WorldState(), preconditionsJSON);
+
+        let effectsJSON = actionJSONEditorEffects.get();
+        newAction.effects = $.extend(new WorldState(), effectsJSON);
+
+        actions.push(newAction);
+    });
+}
+
 function runSearch() {
+    $("#no-results-container mark").remove();
+
     var $plannerResults = $("#plannerList");
     $plannerResults.empty();
     var planner = new Planner();
@@ -102,7 +137,7 @@ function runSearch() {
     
 
     if (results.length == 0) {
-        $plannerResults.html("<h1>no plan available!</h1>");
+        $("#no-results-container").append("<mark>There's no way to meet this goal</mark>");
     }
     renderPlan(startNode, results);
 }
@@ -193,24 +228,55 @@ function setupActions():NodeAction[] {
 
 function renderActions(actions:NodeAction[]){
     const $actionList = $(".action-list");
-
-    let resultList = "";
-    actions.forEach((action:NodeAction, index) => {
-        let actionHtml = $(".action-item-template").html();
-        actionHtml = actionHtml.split("{{index}}").join(index.toString());
-        actionHtml = actionHtml.split("{{name}}").join(action.name);
-        actionHtml = actionHtml.split("{{cost}}").join(action.cost.toString());
-
-        let preconditionsFormatted = $(new JSONFormatter(action.preconditions, 1, jsonFormatterOptions).render()).html();
-        actionHtml = actionHtml.split("{{preconditions}}").join( preconditionsFormatted );
-
-        let effectsFormatted = $(new JSONFormatter(action.effects, 1, jsonFormatterOptions).render()).html();
-        actionHtml = actionHtml.split("{{effects}}").join( effectsFormatted );
-
-        resultList += actionHtml;
-    });
     $actionList.empty();
-    $actionList.append(resultList);
+    actions.forEach((action:NodeAction) => {
+        addActionToHTML(action.name, 1, action.preconditions, action.effects);
+    });
+}
+
+function addActionToHTML(name = "[New actions]", cost = 1, preconditionsJSON = {}, effectsJSON = {}) { 
+    const $actionList = $(".action-list");
+    let actionHtml = $(".action-item-template").html();
+    actionHtml = actionHtml.split("{{index}}").join($actionList.children().length.toString());
+    actionHtml = actionHtml.split("{{name}}").join(name);
+    actionHtml = actionHtml.split("{{cost}}").join(cost.toString());
+
+    actionHtml = actionHtml.split("{{preconditions}}").join( "" );
+    actionHtml = actionHtml.split("{{effects}}").join( "" );
+
+    $actionList.append(actionHtml);
+
+    let $newAction = $actionList.children().last();
+    let actionPreconditionsEditor = new JSONEditor($newAction.find(".action-preconditions")[0], $.extend(editableOptions,{"name":"preconditions"}));
+    actionPreconditionsEditor.set(preconditionsJSON);
+    $newAction.data("json-editor-preconditions", actionPreconditionsEditor);
+    let actionEffectsEditor = new JSONEditor($newAction.find(".action-effects")[0], $.extend(editableOptions,{"name":"effects"}));
+    actionEffectsEditor.set(effectsJSON);
+    $newAction.data("json-editor-effects", actionEffectsEditor);
+}
+
+function addEmptyAction() { 
+    const $actionList = $(".action-list");
+    let actionHtml = $(".action-item-template").html();
+    actionHtml = actionHtml.split("{{index}}").join($actionList.children().length.toString());
+    actionHtml = actionHtml.split("{{name}}").join("[New action]");
+    actionHtml = actionHtml.split("{{cost}}").join("1");
+
+    let preconditionsFormatted = $(new JSONFormatter({}, 1, jsonFormatterOptions).render()).html();
+    actionHtml = actionHtml.split("{{preconditions}}").join( "" );
+
+    let effectsFormatted = $(new JSONFormatter({}, 1, jsonFormatterOptions).render()).html();
+    actionHtml = actionHtml.split("{{effects}}").join( "" );
+
+    $actionList.append(actionHtml);
+
+    let $newAction = $actionList.children().last();
+    let actionPreconditionsEditor = new JSONEditor($newAction.find(".action-preconditions")[0], $.extend(editableOptions,{"name":"preconditions"}));
+    actionPreconditionsEditor.set({});
+    $newAction.data("json-editor-preconditions", actionPreconditionsEditor);
+    let actionEffectsEditor = new JSONEditor($newAction.find(".action-effects")[0], $.extend(editableOptions,{"name":"effects"}));
+    actionEffectsEditor.set({});
+    $newAction.data("json-editor-effects", actionEffectsEditor);
 }
 
 function renderPlan(startNode:GoalNode, results:IGraphEdge[]){

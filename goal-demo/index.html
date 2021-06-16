@@ -34,7 +34,6 @@
 		<div class="container">
 			<div class="row">
 				<div class="col-6">
-					<h2>Demonstration</h2> 
 					
 					<div class="row">
 						<div class="col-6">
@@ -49,45 +48,46 @@
 
 				</div>
 				<div class="col-6">
-					<h4>Actions</h4>
-					<div class="accordion action-list" id="actionsAccordion">
-						<script type="text/template" class="action-item-template">
-							<div class="accordion-item">
-								<h2 class="accordion-header" id="heading{{index}}">
-								  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{index}}" aria-expanded="true" aria-controls="collapse{{index}}">
-									<div class="form-check form-switch">
-										<input class="form-check-input" checked type="checkbox" id="flexSwitchCheckDefault">
-										<label class="form-check-label" for="flexSwitchCheckDefault">{{name}} </label>
-									  </div>  
-									
-								  </button>
-								</h2>
-								<div id="collapse{{index}}" class="accordion-collapse collapse" aria-labelledby="heading{{index}}" data-bs-parent="#actionsAccordion">
-								  <div class="accordion-body">
-									<p>Cost: {{cost}}</p>
-									<div class="row">
-										<div class="col-6">
-										  <h4>Preconditions</h4>
-										  {{preconditions}}
-										  <!-- <textarea class="form-control form-control-sm" rows="3"></textarea> -->
-										</div>
-										<div class="col-6">
-										  <h4>Effects</h4>
-										  {{effects}}
-										  <!-- <textarea class="form-control form-control-sm" rows="3"></textarea> -->
-										</div>
+					<h4>Actions <button type="button" id="addAction" class="btn btn-secondary">Add new action</button></h4>
+					<div class="accordion action-list overflow-auto" id="actionsAccordion" style="max-height: 425px;">
+						
+					</div>
+					<script type="text/template" class="action-item-template">
+						<div class="accordion-item">
+							<h2 class="accordion-header" id="heading{{index}}">
+							  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{index}}" aria-expanded="true" aria-controls="collapse{{index}}">
+								<div class="form-check form-switch" style="width: 90%;">
+									<input class="form-check-input" checked type="checkbox" id="flexSwitchCheck{{index}}">
+									<input type="text" class="form-control form-input" value="{{name}}" name="action-name{{index}}" for="flexSwitchCheck{{index}}"></input>
+								  </div>  
+								
+							  </button>
+							</h2>
+							<div id="collapse{{index}}" class="accordion-collapse collapse" aria-labelledby="heading{{index}}" data-bs-parent="#actionsAccordion">
+							  <div class="accordion-body">
+								<p>Cost: {{cost}}</p>
+								<div class="row">
+									<div class="col-6">
+									  <h4>Preconditions</h4>
+									  <div class="action-preconditions">{{preconditions}}</div>
+									  <!-- <textarea class="form-control form-control-sm" rows="3"></textarea> -->
 									</div>
-								  </div>
+									<div class="col-6">
+									  <h4>Effects</h4>
+									  <div class="action-effects">{{effects}}</div>
+									  <!-- <textarea class="form-control form-control-sm" rows="3"></textarea> -->
+									</div>
 								</div>
 							  </div>
-						</script>
-					  </div>
+							</div>
+						  </div>
+					</script>
 				</div>
 			</div>
 		</div>
 		<div class="container">
 			<div class="row">
-				<div class="col-12">
+				<div class="col-12" id="no-results-container">
 					<h3>Plan of action <button type="button" class="btn btn-outline-primary btn-lg run-search" >Find a plan</button></h3>
 					<p>This is the series of actions we'd take to get from the initial state of the world to the desired goal.</p>
 					
