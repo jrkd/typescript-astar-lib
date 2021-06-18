@@ -41,7 +41,8 @@
 							<div class="form-control form-control-sm initial-world-state"></div>
 						</div>
 						<div class="col-6">
-							<h4>Goal state of the world</h4>
+							<h4>Goals that we'd like to reach</h4>
+							<p>Ordered from most to least important</p>
 							<div  class="form-control form-control-sm goal-world-state"></div>
 						</div>
 					</div>
@@ -91,10 +92,10 @@
 		</div>
 		<div class="container">
 			<div class="row">
-				<div class="col-12" id="no-results-container">
+				<div class="col-12" >
 					<h3>Plan of action <button type="button" class="btn btn-outline-primary btn-lg run-search" >Find a plan</button></h3>
 					<p>This is the series of actions we'd take to get from the initial state of the world to the desired goal.</p>
-					
+					<div id="no-results-container"></div>
 				</div>
 			</div>
 			<div class="row m-2" >

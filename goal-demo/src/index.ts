@@ -44,25 +44,38 @@ const editableOptions = {
     "mainMenuBar": false,
     "navigationBar": false, 
     "limitDragging": true,
-    "onCreateMenu": (items) =>{
-      return items.filter( (el) => {
-        return el.text == "Append" || el.text == "Remove"
-      }).map((el) => { delete el.submenu;return el;});
+    "onCreateMenu": (items, context) =>{
+        return items.filter( (el, _) => {
+            return el.text == "Append" || el.text == "Remove"
+        }).map((el) => { delete el.submenu;return el;});
     }
+  };
+
+  
+const goalOptions = { 
+    "search": false,
+    "mainMenuBar": false,
+    "navigationBar": false, 
+    "limitDragging": true
   };
 
   var actions: NodeAction[];
 let intitialWorldStateEditor, goalWorldStateEditor;
 
-let goalStateJSON = {
-    "customersServed": true
-};    
+    let goalStateJSON = {
+        "Serve Customers": {
+            "customersServed": true
+        }, 
+        "Dont be hungry": {
+            "isHungry": false
+        }
+    };
 
 $(function() {
     intitialWorldStateEditor = new JSONEditor($(".initial-world-state")[0], $.extend(editableOptions,{"name":"Initial world state"}));
     intitialWorldStateEditor.set(initialStateJSON);
 
-    goalWorldStateEditor = new JSONEditor($(".goal-world-state")[0], $.extend(editableOptions,{"name":"Goal world state"}));
+    goalWorldStateEditor = new JSONEditor($(".goal-world-state")[0], $.extend(goalOptions,{"name":"Goal world state"}));
     goalWorldStateEditor.set(goalStateJSON);
     // $(".initial-world-state").append(new JSONFormatter(initialStateJSON, 1, jsonFormatterOptions).render());
     // $(".goal-world-state").append(new JSONFormatter(goalStateJSON, 1, jsonFormatterOptions).render());
@@ -126,8 +139,47 @@ function runSearch() {
     let startState: WorldState = new WorldState();
     $.extend(startState, initialStateJSON);
 
-    let goalState: WorldState = new WorldState();
-    $.extend(goalState, goalStateJSON);
+    let startNode: GoalNode = new GoalNode();
+    startNode.state = startState;
+
+    let results = [];//AStar.search(planner, startNode, goalNode, {});
+
+    const goalNames = Object.keys(goalStateJSON);
+    
+
+    let unmetGoals = [];
+    let metGoalName = "";
+    for(let index = 0; index < goalNames.length; ++index)
+    {
+        const goalName = goalNames[index];
+        let goalJSON:WorldState = goalStateJSON[goalName];
+        let goalState: WorldState = new WorldState();
+        $.extend(goalState, goalJSON);
+        let goalResults = runSearchForGoal(actions, startState, goalState);
+        if(goalResults.length > 0){
+            results = goalResults;
+            metGoalName = goalName;
+            break;
+        } else{
+            unmetGoals.push(goalName);
+        }
+    }
+
+    unmetGoals.forEach(goalName => {
+        $("#no-results-container").append("<p>Unable to meet <mark>"+goalName + "</mark> goal"+"</p>");
+    });
+
+    if(metGoalName.length > 0){
+        $("#no-results-container").append("<p>Plan to get to goal <mark>" +metGoalName + "</mark>"+"</p>");
+    }
+    
+    renderPlan(startNode, results);
+}
+
+function runSearchForGoal(_actions:NodeAction[],startState: WorldState, goalState:WorldState):IGraphEdge[] {
+    var planner = new Planner();
+
+    planner.actions = _actions;
 
     let startNode: GoalNode = new GoalNode();
     startNode.state = startState;
@@ -138,12 +190,7 @@ function runSearch() {
 
     let results = AStar.search(planner, startNode, goalNode, {});
 
-    
-
-    if (results.length == 0) {
-        $("#no-results-container").append("<mark>There's no way to meet this goal</mark>");
-    }
-    renderPlan(startNode, results);
+    return results;
 }
 
 function setupActions():NodeAction[] {

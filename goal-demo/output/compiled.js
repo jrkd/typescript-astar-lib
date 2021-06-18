@@ -17528,21 +17528,32 @@ const editableOptions = {
     "mainMenuBar": false,
     "navigationBar": false,
     "limitDragging": true,
-    "onCreateMenu": (items) => {
-        return items.filter((el) => {
+    "onCreateMenu": (items, context) => {
+        return items.filter((el, _) => {
             return el.text == "Append" || el.text == "Remove";
         }).map((el) => { delete el.submenu; return el; });
     }
 };
+const goalOptions = {
+    "search": false,
+    "mainMenuBar": false,
+    "navigationBar": false,
+    "limitDragging": true
+};
 var actions;
 let intitialWorldStateEditor, goalWorldStateEditor;
 let goalStateJSON = {
-    "customersServed": true
+    "Serve Customers": {
+        "customersServed": true
+    },
+    "Dont be hungry": {
+        "isHungry": false
+    }
 };
 $(function () {
     intitialWorldStateEditor = new JSONEditor($(".initial-world-state")[0], $.extend(editableOptions, { "name": "Initial world state" }));
     intitialWorldStateEditor.set(initialStateJSON);
-    goalWorldStateEditor = new JSONEditor($(".goal-world-state")[0], $.extend(editableOptions, { "name": "Goal world state" }));
+    goalWorldStateEditor = new JSONEditor($(".goal-world-state")[0], $.extend(goalOptions, { "name": "Goal world state" }));
     goalWorldStateEditor.set(goalStateJSON);
     // $(".initial-world-state").append(new JSONFormatter(initialStateJSON, 1, jsonFormatterOptions).render());
     // $(".goal-world-state").append(new JSONFormatter(goalStateJSON, 1, jsonFormatterOptions).render());
@@ -17585,7 +17596,7 @@ function updateDataFromPage() {
     });
 }
 function runSearch() {
-    $("#no-results-container mark").remove();
+    $("#no-results-container").html("");
     var $plannerResults = $("#plannerList");
     $plannerResults.empty();
     var planner = new new_astar_1.Planner();
@@ -17593,18 +17604,45 @@ function runSearch() {
     //setup current state
     let startState = new new_astar_1.WorldState();
     $.extend(startState, initialStateJSON);
-    let goalState = new new_astar_1.WorldState();
-    $.extend(goalState, goalStateJSON);
+    let startNode = new new_astar_1.GoalNode();
+    startNode.state = startState;
+    let results = []; //AStar.search(planner, startNode, goalNode, {});
+    const goalNames = Object.keys(goalStateJSON);
+    let unmetGoals = [];
+    let metGoalName = "";
+    for (let index = 0; index < goalNames.length; ++index) {
+        const goalName = goalNames[index];
+        let goalJSON = goalStateJSON[goalName];
+        let goalState = new new_astar_1.WorldState();
+        $.extend(goalState, goalJSON);
+        let goalResults = runSearchForGoal(actions, startState, goalState);
+        if (goalResults.length > 0) {
+            results = goalResults;
+            metGoalName = goalName;
+            break;
+        }
+        else {
+            unmetGoals.push(goalName);
+        }
+    }
+    unmetGoals.forEach(goalName => {
+        $("#no-results-container").append("<p>Unable to meet <mark>" + goalName + "</mark> goal" + "</p>");
+    });
+    if (metGoalName.length > 0) {
+        $("#no-results-container").append("<p>Plan to get to goal <mark>" + metGoalName + "</mark>" + "</p>");
+    }
+    renderPlan(startNode, results);
+}
+function runSearchForGoal(_actions, startState, goalState) {
+    var planner = new new_astar_1.Planner();
+    planner.actions = _actions;
     let startNode = new new_astar_1.GoalNode();
     startNode.state = startState;
     let goalNode = new new_astar_1.GoalNode();
     goalNode.state = goalState;
     planner.preprocessGraph(startNode);
     let results = new_astar_1.AStar.search(planner, startNode, goalNode, {});
-    if (results.length == 0) {
-        $("#no-results-container").append("<mark>There's no way to meet this goal</mark>");
-    }
-    renderPlan(startNode, results);
+    return results;
 }
 function setupActions() {
     let moveToBank = new new_astar_1.NodeAction();

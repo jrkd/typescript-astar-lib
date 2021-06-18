@@ -9,7 +9,7 @@
             "type": "chrome",
             "request": "launch",
             "name": "Launch with chrome",
-            "url": "http://localhost:81/goal-demo",
+            "url": "http://localhost:81/",
             "webRoot": "${workspaceRoot}",
             "sourceMaps": true,
             "trace": true,
