@@ -72,6 +72,8 @@ let intitialWorldStateEditor, goalWorldStateEditor;
     };
 
 $(function() {
+    loadDataFromStorage();
+
     intitialWorldStateEditor = new JSONEditor($(".initial-world-state")[0], $.extend(editableOptions,{"name":"Initial world state"}));
     intitialWorldStateEditor.set(initialStateJSON);
 
@@ -124,10 +126,41 @@ function updateDataFromPage(){
 
         actions.push(newAction);
     });
+
+    saveDataToStorage(initialStateJSON, goalStateJSON, actions);
+}
+
+function saveDataToStorage(initialStateJSON, goalStateJSON, actions)
+{
+    window.localStorage.setItem("initialStateJSON", JSON.stringify(initialStateJSON));
+    window.localStorage.setItem("goalStateJSON", JSON.stringify(goalStateJSON));
+    window.localStorage.setItem("actions", JSON.stringify(actions));
+}
+
+function loadDataFromStorage(){
+    const stoageInitialStateJSON = window.localStorage.getItem("initialStateJSON");
+    if(stoageInitialStateJSON != null && stoageInitialStateJSON.length > 0){
+        initialStateJSON = JSON.parse(stoageInitialStateJSON);
+    }
+    
+    const storageGoalStateJSON = window.localStorage.getItem("goalStateJSON");
+    if(storageGoalStateJSON != null &&  storageGoalStateJSON.length > 0){
+        goalStateJSON = JSON.parse(storageGoalStateJSON);
+    }
+    
+    const storageActions = window.localStorage.getItem("actions");
+    if(storageActions != null &&  storageActions.length > 0){
+        actions = JSON.parse(storageActions).map(actionJSON => {
+            let action:NodeAction = $.extend(new NodeAction(), actionJSON);
+            action.preconditions = $.extend(new WorldState(), actionJSON.preconditions);
+            action.effects = $.extend(new WorldState(), actionJSON.effects);
+            return action;
+        });
+    }
 }
 
 function runSearch() {
-    $("#no-results-container mark").remove();
+    $("#no-results-container").html("");
 
     var $plannerResults = $("#plannerList");
     $plannerResults.empty();

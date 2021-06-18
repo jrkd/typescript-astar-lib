@@ -17551,6 +17551,7 @@ let goalStateJSON = {
     }
 };
 $(function () {
+    loadDataFromStorage();
     intitialWorldStateEditor = new JSONEditor($(".initial-world-state")[0], $.extend(editableOptions, { "name": "Initial world state" }));
     intitialWorldStateEditor.set(initialStateJSON);
     goalWorldStateEditor = new JSONEditor($(".goal-world-state")[0], $.extend(goalOptions, { "name": "Goal world state" }));
@@ -17594,6 +17595,31 @@ function updateDataFromPage() {
         newAction.effects = $.extend(new new_astar_1.WorldState(), effectsJSON);
         actions.push(newAction);
     });
+    saveDataToStorage(initialStateJSON, goalStateJSON, actions);
+}
+function saveDataToStorage(initialStateJSON, goalStateJSON, actions) {
+    window.localStorage.setItem("initialStateJSON", JSON.stringify(initialStateJSON));
+    window.localStorage.setItem("goalStateJSON", JSON.stringify(goalStateJSON));
+    window.localStorage.setItem("actions", JSON.stringify(actions));
+}
+function loadDataFromStorage() {
+    const stoageInitialStateJSON = window.localStorage.getItem("initialStateJSON");
+    if (stoageInitialStateJSON != null && stoageInitialStateJSON.length > 0) {
+        initialStateJSON = JSON.parse(stoageInitialStateJSON);
+    }
+    const storageGoalStateJSON = window.localStorage.getItem("goalStateJSON");
+    if (storageGoalStateJSON != null && storageGoalStateJSON.length > 0) {
+        goalStateJSON = JSON.parse(storageGoalStateJSON);
+    }
+    const storageActions = window.localStorage.getItem("actions");
+    if (storageActions != null && storageActions.length > 0) {
+        actions = JSON.parse(storageActions).map(actionJSON => {
+            let action = $.extend(new new_astar_1.NodeAction(), actionJSON);
+            action.preconditions = $.extend(new new_astar_1.WorldState(), actionJSON.preconditions);
+            action.effects = $.extend(new new_astar_1.WorldState(), actionJSON.effects);
+            return action;
+        });
+    }
 }
 function runSearch() {
     $("#no-results-container").html("");
