@@ -93,6 +93,25 @@
 		<div class="container">
 			<div class="row">
 				<div class="col-12" >
+					
+					<ul class="nav nav-tabs" id="myTab" role="tablist" style="display: none; visibility: hidden;">
+						<li class="nav-item dropdown">
+							<a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">Dropdown</a>
+							<ul class="dropdown-menu">
+							  <li><a class="dropdown-item" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab" aria-controls="contact" aria-selected="false">ActionSet 1</a></li>
+							</ul>
+						  </li>
+					  </ul>
+					  <div class="tab-content" id="myTabContent">
+						<div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab"></div>
+						<div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">..action set 1.
+							TODO: Add actionset/agent name 
+							store in local storage 
+							update action list html based on newly selected actionset 
+							add ability to add new actionsets, with input[text] for name  
+
+						</div>
+					  </div>
 					<h3>Plan of action <button type="button" class="btn btn-outline-primary btn-lg run-search" >Find a plan</button></h3>
 					<p>This is the series of actions we'd take to get from the initial state of the world to the desired goal.</p>
 					<div id="no-results-container"></div>
