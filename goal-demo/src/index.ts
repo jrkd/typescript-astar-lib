@@ -98,12 +98,15 @@ $(function() {
     
     $(".run-search").click(()=>{
         updateDataFromPage();
-        runSearch();
+        const currentActionset = getCurrentActionset();
+
+        $(".plan-list-results").empty();
+        actionSets.forEach(actionset=>runSearch(actionset));
     });
     $("#addAction").click(()=>{
         const currentActionset = getCurrentActionset();
         let $actionList = $(`#actions-${currentActionset.name}-accordion`);
-        addEmptyAction($actionList); 
+        addEmptyAction($actionList, currentActionset.name); 
     });
     $('body').on('click', '.delete-action',(e)=>{
         $(e.currentTarget).closest(".accordion-item").remove();
@@ -115,36 +118,53 @@ function updateDataFromPage(){
     initialStateJSON = intitialWorldStateEditor.get();
     goalStateJSON = goalWorldStateEditor.get();
 
-    const currentActionset = getCurrentActionset();
-    //let actions = currentActionset.actions;
-    currentActionset.actions = [];
-    let $actionList = $(`#actions-${currentActionset.name}-accordion`);
-    $actionList.children()
-    .filter((index,child) => $(child).find(".form-check-input").is(":checked"))
-    .each((index:number, element:HTMLElement) => {
-        let $actionElement = $(element);
-        let actionJSONEditorPreConditions = $(element).data("json-editor-preconditions");
-        let actionJSONEditorEffects = $(element).data("json-editor-effects");
-        let newAction: NodeAction = new NodeAction();
-        newAction.name = $actionElement.find("input.action-name").val().toString();
-        newAction.cost = parseInt($actionElement.find("input.action-cost").val().toString());
+    actionSets = [];
+    $(".actionset-container").each( (index, actionsetContainer) =>{
 
-        let preconditionsJSON = actionJSONEditorPreConditions.get();
-        newAction.preconditions = $.extend(new WorldState(), preconditionsJSON);
-
-        let effectsJSON = actionJSONEditorEffects.get();
-        newAction.effects = $.extend(new WorldState(), effectsJSON);
-
-        currentActionset.actions.push(newAction);
+        const actionsetName:string = $(actionsetContainer).find(".actionset-name").val().toString();
+        let currentActionset:ActionSet = actionSets.filter(actionset=>actionset.name === actionsetName)[0];
+        if(currentActionset == null){
+            currentActionset = new ActionSet();
+            currentActionset.name = actionsetName;
+            actionSets.push(currentActionset);
+        }
+        //let actions = currentActionset.actions;
+        currentActionset.actions = [];
+        let $actionList = $(`#actions-${currentActionset.name}-accordion`);
+        $actionList.children()
+        .filter((index,child) => $(child).find(".form-check-input").is(":checked"))
+        .each((index:number, element:HTMLElement) => {
+            let $actionElement = $(element);
+            let actionJSONEditorPreConditions = $(element).data("json-editor-preconditions");
+            let actionJSONEditorEffects = $(element).data("json-editor-effects");
+            let newAction: NodeAction = new NodeAction();
+            newAction.name = $actionElement.find("input.action-name").val().toString();
+            newAction.cost = parseInt($actionElement.find("input.action-cost").val().toString());
+    
+            let preconditionsJSON = actionJSONEditorPreConditions.get();
+            newAction.preconditions = $.extend(new WorldState(), preconditionsJSON);
+    
+            let effectsJSON = actionJSONEditorEffects.get();
+            newAction.effects = $.extend(new WorldState(), effectsJSON);
+    
+            currentActionset.actions.push(newAction);
+        });
+    
+        //let $actionsetNameInput = $(`#actionset-${currentActionset.name}-name`);
+        //currentActionset.name = $actionsetNameInput.val().toString();
+    
     });
 
+  
 
     saveDataToStorage(initialStateJSON, goalStateJSON, actionSets);
+
+    renderActionsets(actionSets);
 }
 
 function getCurrentActionset():ActionSet
 {
-    let actionsetName:string = $("#actionset-names-dropdown .active").text();
+    let actionsetName:string = $($("#actionset-names-dropdown .active")[0]).text();
     return actionSets.filter((actionset => actionset.name == actionsetName))[0];
 }
 
@@ -178,23 +198,16 @@ function loadDataFromStorage(){
             });
             return actionset;
         });
-    } else{
-        actionSets = [{
-          name: "Default",
-          actions: getDefaultActions()
-        }];
     }
 }
 
-function runSearch() {
-    $("#no-results-container").html("");
+function runSearch(actionset:ActionSet) {
 
     var $plannerResults = $("#plannerList");
     $plannerResults.empty();
     var planner = new Planner();
 
-    const currentActions = getCurrentActionset().actions;
-    planner.actions = currentActions;
+    planner.actions = actionset.actions;
 
     //setup current state
     let startState: WorldState = new WorldState();
@@ -216,7 +229,7 @@ function runSearch() {
         let goalJSON:WorldState = goalStateJSON[goalName];
         let goalState: WorldState = new WorldState();
         $.extend(goalState, goalJSON);
-        let goalResults = runSearchForGoal(currentActions, startState, goalState);
+        let goalResults = runSearchForGoal(actionset.actions, startState, goalState);
         if(goalResults.length > 0){
             results = goalResults;
             metGoalName = goalName;
@@ -226,15 +239,15 @@ function runSearch() {
         }
     }
 
-    unmetGoals.forEach(goalName => {
-        $("#no-results-container").append("<p>Unable to meet <mark>"+goalName + "</mark> goal"+"</p>");
-    });
+    //$(".no-results-container:last").append("<h5>Using <mark>"+actionset.name+"'s</mark> actions</h5>");
+    // unmetGoals.forEach(goalName => {
+    //     $(".no-results-container:last").append("<p>Unable to meet <mark>"+goalName + "</mark> goal"+"</p>");
+    // });
 
-    if(metGoalName.length > 0){
-        $("#no-results-container").append("<p>Plan to get to goal <mark>" +metGoalName + "</mark>"+"</p>");
-    }
-    
-    renderPlan(startNode, results);
+    // if(metGoalName.length > 0){
+    //     $(".no-results-container:last").append("<p>Plan to get to goal with <mark>" +metGoalName + "</mark>"+"</p>");
+    // }
+    renderPlan(startNode, results, actionset, unmetGoals, metGoalName);
 }
 
 function runSearchForGoal(_actions:NodeAction[],startState: WorldState, goalState:WorldState):IGraphEdge[] {
@@ -346,6 +359,8 @@ function renderActionsets(actionsets:ActionSet[])
     let $actionsetTabContentTemplate = $(".actionset-tab-content-template");
     let $actionsetTabContentContainer = $("#myTabContent");
 
+    $actionsetTabContainer.empty();
+    $actionsetTabContentContainer.empty();
     actionsets.forEach((actionset:ActionSet, index:number) => {
 
         let actionsetTabHtml:string = $actionsetTabTemplate.html();
@@ -364,25 +379,33 @@ function renderActionsets(actionsets:ActionSet[])
 
         let $actionList = $(`#actions-${actionset.name}-accordion`);
 
-        renderActions($actionList, actionset.actions);
+        renderActions(actionset.name, $actionList, actionset.actions);
+
+        if(index == 0){
+            // $($actionsetTabContainer.find("li a.dropdown-item")).addClass("active");
+            // $($actionsetTabContainer.find("li a.dropdown-item")).attr("aria-selected", "true");
+            // $($actionsetTabContentContainer.children()[0]).addClass("show active");
+            // $($actionsetTabContentContainer.children()[0]).attr("aria-selected", "true");
+        }
     });
 }
 
 
-function renderActions($actionList, actions:NodeAction[]){
+function renderActions(actionsetName:string, $actionList, actions:NodeAction[]){
     //const $actionList = $(".action-list");
     $actionList.empty();
     actions.forEach((action:NodeAction) => {
-        addActionToHTML($actionList, action.name, action.cost, action.preconditions, action.effects);
+        addActionToHTML(actionsetName, $actionList, action.name, action.cost, action.preconditions, action.effects);
     });
 }
 
-function addActionToHTML($actionList, name = "[New actions]", cost = 1, preconditionsJSON = {}, effectsJSON = {}) { 
+function addActionToHTML(actionsetName:string, $actionList, name = "[New actions]", cost = 1, preconditionsJSON = {}, effectsJSON = {}) { 
     //const $actionList = $(".action-list");
     let actionHtml = $(".action-item-template").html();
     actionHtml = actionHtml.split("{{index}}").join($actionList.children().length.toString());
     actionHtml = actionHtml.split("{{name}}").join(name);
     actionHtml = actionHtml.split("{{cost}}").join(cost.toString());
+    actionHtml = actionHtml.split("{{actionsetName}}").join(actionsetName);
 
     actionHtml = actionHtml.split("{{preconditions}}").join( "" );
     actionHtml = actionHtml.split("{{effects}}").join( "" );
@@ -398,12 +421,13 @@ function addActionToHTML($actionList, name = "[New actions]", cost = 1, precondi
     $newAction.data("json-editor-effects", actionEffectsEditor);
 }
 
-function addEmptyAction($actionList) { 
+function addEmptyAction($actionList, actionsetName:string) { 
     //const $actionList = $(".action-list");
     let actionHtml = $(".action-item-template").html();
     actionHtml = actionHtml.split("{{index}}").join($actionList.children().length.toString());
     actionHtml = actionHtml.split("{{name}}").join("[New action]");
     actionHtml = actionHtml.split("{{cost}}").join("1");
+    actionHtml = actionHtml.split("{{actionsetName}}").join(actionsetName);
 
     let preconditionsFormatted = $(new JSONFormatter({}, 1, jsonFormatterOptions).render()).html();
     actionHtml = actionHtml.split("{{preconditions}}").join( "" );
@@ -422,9 +446,24 @@ function addEmptyAction($actionList) {
     $newAction.data("json-editor-effects", actionEffectsEditor);
 }
 
-function renderPlan(startNode:GoalNode, results:IGraphEdge[]){
-    let $planActionList = $("#plannerList");
-    let $planActionDetailList = $("#plannerDetailList");
+function renderPlan(startNode:GoalNode, results:IGraphEdge[], actionset:ActionSet, unmetGoals:string[], metGoalName:string){
+    let $planContainer = $(".plan-list-results");
+    let planTemplateHtml = $(".plan-template").html();
+    let goalDetailsHTML = "";
+    unmetGoals.forEach( goalname => {
+        goalDetailsHTML += $(".plan-unmet-goal").html().split("{{goalName}}").join(goalname);
+    });
+    if(metGoalName){
+        goalDetailsHTML += $(".plan-met-goal").html().split("{{goalName}}").join(metGoalName);
+    }
+
+    planTemplateHtml = planTemplateHtml.split("{{actionsetname}}").join(actionset.name);
+    planTemplateHtml = planTemplateHtml.split("{{goalDetailsHTML}}").join(goalDetailsHTML);
+
+    $planContainer.append(planTemplateHtml);
+    
+    let $planActionList = $(".plannerList:last");
+    let $planActionDetailList = $(".plannerDetailList:last");
     
     let currentNode: GoalNode = startNode;
 
@@ -437,12 +476,14 @@ function renderPlan(startNode:GoalNode, results:IGraphEdge[]){
 
         planActionHtml = planActionHtml.split("{{index}}").join(index.toString());
         planActionHtml = planActionHtml.split("{{actionName}}").join(result.action.name);
+        planActionHtml = planActionHtml.split("{{actionsetName}}").join(actionset.name);
         resultPlanActions += planActionHtml;
 
         currentNode = result.action.ActivateAction(currentNode);
 
         planActionDetailHtml = planActionDetailHtml.split("{{index}}").join(index.toString());
         planActionDetailHtml = planActionDetailHtml.split("{{actionName}}").join(result.action.name);
+        planActionDetailHtml = planActionDetailHtml.split("{{actionsetName}}").join(actionset.name);
 
         let actionEffectsFormatted = $(new JSONFormatter(result.action.effects, 1, jsonFormatterOptions).render()).html();
         planActionDetailHtml = planActionDetailHtml.split("{{actionEffects}}").join(actionEffectsFormatted);
