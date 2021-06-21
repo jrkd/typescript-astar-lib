@@ -108,6 +108,21 @@ $(function() {
         let $actionList = $(`#actions-${currentActionset.name}-accordion`);
         addEmptyAction($actionList, currentActionset.name); 
     });
+
+    $("#addActionList").click(()=>{
+        updateDataFromPage();
+
+        let newActionSet = new ActionSet();
+        newActionSet.name = "New-Actionset";
+        newActionSet.actions = [
+            new NodeAction()
+        ];
+        actionSets.push(newActionSet);
+
+        renderActionsets(actionSets);
+    });
+    
+
     $('body').on('click', '.delete-action',(e)=>{
         $(e.currentTarget).closest(".accordion-item").remove();
     });
@@ -399,7 +414,7 @@ function renderActions(actionsetName:string, $actionList, actions:NodeAction[]){
     });
 }
 
-function addActionToHTML(actionsetName:string, $actionList, name = "[New actions]", cost = 1, preconditionsJSON = {}, effectsJSON = {}) { 
+function addActionToHTML(actionsetName:string, $actionList, name = "[New action]", cost = 1, preconditionsJSON = {}, effectsJSON = {}) { 
     //const $actionList = $(".action-list");
     let actionHtml = $(".action-item-template").html();
     actionHtml = actionHtml.split("{{index}}").join($actionList.children().length.toString());

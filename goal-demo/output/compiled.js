@@ -17580,6 +17580,16 @@ $(function () {
         let $actionList = $(`#actions-${currentActionset.name}-accordion`);
         addEmptyAction($actionList, currentActionset.name);
     });
+    $("#addActionList").click(() => {
+        updateDataFromPage();
+        let newActionSet = new ActionSet();
+        newActionSet.name = "New-Actionset";
+        newActionSet.actions = [
+            new new_astar_1.NodeAction()
+        ];
+        actionSets.push(newActionSet);
+        renderActionsets(actionSets);
+    });
     $('body').on('click', '.delete-action', (e) => {
         $(e.currentTarget).closest(".accordion-item").remove();
     });
