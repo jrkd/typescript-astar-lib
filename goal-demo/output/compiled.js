@@ -17588,6 +17588,7 @@ function updateDataFromPage() {
     goalStateJSON = goalWorldStateEditor.get();
     const currentActionset = getCurrentActionset();
     //let actions = currentActionset.actions;
+    currentActionset.actions = [];
     let $actionList = $(`#actions-${currentActionset.name}-accordion`);
     $actionList.children()
         .filter((index, child) => $(child).find(".form-check-input").is(":checked"))
