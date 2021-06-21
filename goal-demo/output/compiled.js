@@ -17540,7 +17540,11 @@ const goalOptions = {
     "navigationBar": false,
     "limitDragging": true
 };
-var actions;
+//var actions: NodeAction[];
+class ActionSet {
+}
+;
+let actionSets = [];
 let intitialWorldStateEditor, goalWorldStateEditor;
 let goalStateJSON = {
     "Serve Customers": {
@@ -17562,14 +17566,17 @@ $(function () {
     //planner.nodes -- we dont really have a full list of them right? cause each action just tweaks them?...
     //suppose you could make things quick by pre-processing?
     //actions:
-    actions = setupActions();
-    renderActions(actions);
+    //actions = setupActions();
+    //renderActions(actions);
+    renderActionsets(actionSets);
     $(".run-search").click(() => {
         updateDataFromPage();
         runSearch();
     });
     $("#addAction").click(() => {
-        addEmptyAction();
+        const currentActionset = getCurrentActionset();
+        let $actionList = $(`#actions-${currentActionset.name}-accordion`);
+        addEmptyAction($actionList);
     });
     $('body').on('click', '.delete-action', (e) => {
         $(e.currentTarget).closest(".accordion-item").remove();
@@ -17579,8 +17586,10 @@ function updateDataFromPage() {
     //set initial and goal state based on current 
     initialStateJSON = intitialWorldStateEditor.get();
     goalStateJSON = goalWorldStateEditor.get();
-    actions = [];
-    $(".action-list").children()
+    const currentActionset = getCurrentActionset();
+    //let actions = currentActionset.actions;
+    let $actionList = $(`#actions-${currentActionset.name}-accordion`);
+    $actionList.children()
         .filter((index, child) => $(child).find(".form-check-input").is(":checked"))
         .each((index, element) => {
         let $actionElement = $(element);
@@ -17593,14 +17602,18 @@ function updateDataFromPage() {
         newAction.preconditions = $.extend(new new_astar_1.WorldState(), preconditionsJSON);
         let effectsJSON = actionJSONEditorEffects.get();
         newAction.effects = $.extend(new new_astar_1.WorldState(), effectsJSON);
-        actions.push(newAction);
+        currentActionset.actions.push(newAction);
     });
-    saveDataToStorage(initialStateJSON, goalStateJSON, actions);
+    saveDataToStorage(initialStateJSON, goalStateJSON, actionSets);
 }
-function saveDataToStorage(initialStateJSON, goalStateJSON, actions) {
+function getCurrentActionset() {
+    let actionsetName = $("#actionset-names-dropdown .active").text();
+    return actionSets.filter((actionset => actionset.name == actionsetName))[0];
+}
+function saveDataToStorage(initialStateJSON, goalStateJSON, actionSets) {
     window.localStorage.setItem("initialStateJSON", JSON.stringify(initialStateJSON));
     window.localStorage.setItem("goalStateJSON", JSON.stringify(goalStateJSON));
-    window.localStorage.setItem("actions", JSON.stringify(actions));
+    window.localStorage.setItem("actionsets", JSON.stringify(actionSets));
 }
 function loadDataFromStorage() {
     const stoageInitialStateJSON = window.localStorage.getItem("initialStateJSON");
@@ -17611,14 +17624,24 @@ function loadDataFromStorage() {
     if (storageGoalStateJSON != null && storageGoalStateJSON.length > 0) {
         goalStateJSON = JSON.parse(storageGoalStateJSON);
     }
-    const storageActions = window.localStorage.getItem("actions");
-    if (storageActions != null && storageActions.length > 0) {
-        actions = JSON.parse(storageActions).map(actionJSON => {
-            let action = $.extend(new new_astar_1.NodeAction(), actionJSON);
-            action.preconditions = $.extend(new new_astar_1.WorldState(), actionJSON.preconditions);
-            action.effects = $.extend(new new_astar_1.WorldState(), actionJSON.effects);
-            return action;
+    const storageActionsets = window.localStorage.getItem("actionsets");
+    if (storageActionsets != null && storageActionsets.length > 0) {
+        actionSets = JSON.parse(storageActionsets).map(actionsetJSON => {
+            let actionset = actionsetJSON;
+            actionset.actions = actionset.actions.map(actionJSON => {
+                let action = $.extend(new new_astar_1.NodeAction(), actionJSON);
+                action.preconditions = $.extend(new new_astar_1.WorldState(), actionJSON.preconditions);
+                action.effects = $.extend(new new_astar_1.WorldState(), actionJSON.effects);
+                return action;
+            });
+            return actionset;
         });
+    }
+    else {
+        actionSets = [{
+                name: "Default",
+                actions: getDefaultActions()
+            }];
     }
 }
 function runSearch() {
@@ -17626,7 +17649,8 @@ function runSearch() {
     var $plannerResults = $("#plannerList");
     $plannerResults.empty();
     var planner = new new_astar_1.Planner();
-    planner.actions = actions;
+    const currentActions = getCurrentActionset().actions;
+    planner.actions = currentActions;
     //setup current state
     let startState = new new_astar_1.WorldState();
     $.extend(startState, initialStateJSON);
@@ -17641,7 +17665,7 @@ function runSearch() {
         let goalJSON = goalStateJSON[goalName];
         let goalState = new new_astar_1.WorldState();
         $.extend(goalState, goalJSON);
-        let goalResults = runSearchForGoal(actions, startState, goalState);
+        let goalResults = runSearchForGoal(currentActions, startState, goalState);
         if (goalResults.length > 0) {
             results = goalResults;
             metGoalName = goalName;
@@ -17670,7 +17694,7 @@ function runSearchForGoal(_actions, startState, goalState) {
     let results = new_astar_1.AStar.search(planner, startNode, goalNode, {});
     return results;
 }
-function setupActions() {
+function getDefaultActions() {
     let moveToBank = new new_astar_1.NodeAction();
     moveToBank.name = "Move to bank";
     moveToBank.cost = 1;
@@ -17744,15 +17768,34 @@ function setupActions() {
     getCheese.effects.numCheese = 1;
     return [workAJob, moveToBank, getSliceOfBread, getCheese, buyPizza, learnToMakeBestToastie, serveCustomers, takeMoneyFromBank, makeToastie];
 }
-function renderActions(actions) {
-    const $actionList = $(".action-list");
-    $actionList.empty();
-    actions.forEach((action) => {
-        addActionToHTML(action.name, action.cost, action.preconditions, action.effects);
+function renderActionsets(actionsets) {
+    let $actionsetTabTemplate = $(".actionset-tab-template");
+    let $actionsetTabContainer = $("#actionset-names-dropdown");
+    let $actionsetTabContentTemplate = $(".actionset-tab-content-template");
+    let $actionsetTabContentContainer = $("#myTabContent");
+    actionsets.forEach((actionset, index) => {
+        let actionsetTabHtml = $actionsetTabTemplate.html();
+        actionsetTabHtml = actionsetTabHtml.split("{{name}}").join(actionset.name);
+        actionsetTabHtml = actionsetTabHtml.split("{{index}}").join(index.toString());
+        $actionsetTabContainer.append(actionsetTabHtml);
+        let actionsetTabContentHtml = $actionsetTabContentTemplate.html();
+        actionsetTabContentHtml = actionsetTabContentHtml.split("{{name}}").join(actionset.name);
+        actionsetTabContentHtml = actionsetTabContentHtml.split("{{index}}").join(index.toString());
+        $actionsetTabContentContainer.append(actionsetTabContentHtml);
+        //Once we've added the html for each action list, we populate the actions as per. 
+        let $actionList = $(`#actions-${actionset.name}-accordion`);
+        renderActions($actionList, actionset.actions);
     });
 }
-function addActionToHTML(name = "[New actions]", cost = 1, preconditionsJSON = {}, effectsJSON = {}) {
-    const $actionList = $(".action-list");
+function renderActions($actionList, actions) {
+    //const $actionList = $(".action-list");
+    $actionList.empty();
+    actions.forEach((action) => {
+        addActionToHTML($actionList, action.name, action.cost, action.preconditions, action.effects);
+    });
+}
+function addActionToHTML($actionList, name = "[New actions]", cost = 1, preconditionsJSON = {}, effectsJSON = {}) {
+    //const $actionList = $(".action-list");
     let actionHtml = $(".action-item-template").html();
     actionHtml = actionHtml.split("{{index}}").join($actionList.children().length.toString());
     actionHtml = actionHtml.split("{{name}}").join(name);
@@ -17768,8 +17811,8 @@ function addActionToHTML(name = "[New actions]", cost = 1, preconditionsJSON = {
     actionEffectsEditor.set(effectsJSON);
     $newAction.data("json-editor-effects", actionEffectsEditor);
 }
-function addEmptyAction() {
-    const $actionList = $(".action-list");
+function addEmptyAction($actionList) {
+    //const $actionList = $(".action-list");
     let actionHtml = $(".action-item-template").html();
     actionHtml = actionHtml.split("{{index}}").join($actionList.children().length.toString());
     actionHtml = actionHtml.split("{{name}}").join("[New action]");
@@ -17812,10 +17855,6 @@ function renderPlan(startNode, results) {
     $planActionList.append(resultPlanActions);
     $planActionDetailList.empty();
     $planActionDetailList.append(resultPlanActionDetails);
-}
-function retrieveWorldState($element) {
-    let jsonObj = JSON.parse($element.val());
-    return jsonObj;
 }
 
 
