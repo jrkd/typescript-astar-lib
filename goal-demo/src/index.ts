@@ -77,7 +77,18 @@ let intitialWorldStateEditor, goalWorldStateEditor;
     };
 
 $(function() {
-    loadDataFromStorage();
+    const urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.get("initialStateJSON"))
+    {
+        loadDataFromQuerystring();
+    }
+    else
+    {
+        loadDataFromStorage();
+    }
+    
+
+    
 
     intitialWorldStateEditor = new JSONEditor($(".initial-world-state")[0], $.extend(editableOptions,{"name":"Initial world state"}));
     intitialWorldStateEditor.set(initialStateJSON);
@@ -95,7 +106,10 @@ $(function() {
     //renderActions(actions);
     renderActionsets(actionSets);
 
-    
+    $("#saveCurrent").click((e)=>{
+        e.preventDefault();
+        saveDataToQuerystring();
+    });
     $(".run-search").click(()=>{
         updateDataFromPage();
         const currentActionset = getCurrentActionset();
@@ -214,6 +228,41 @@ function loadDataFromStorage(){
             return actionset;
         });
     }
+}
+
+function loadDataFromQuerystring(){
+
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    const stoageInitialStateJSON = decodeURIComponent(urlParams.get('initialStateJSON'));
+    if(stoageInitialStateJSON != null && stoageInitialStateJSON.length > 0){
+        initialStateJSON = JSON.parse(stoageInitialStateJSON);
+    }
+    
+    const storageGoalStateJSON = decodeURIComponent(urlParams.get("goalStateJSON"));
+    if(storageGoalStateJSON != null &&  storageGoalStateJSON.length > 0){
+        goalStateJSON = JSON.parse(storageGoalStateJSON);
+    }
+    
+    const storageActionsets = decodeURIComponent(urlParams.get("actionsets"));
+    if(storageActionsets != null &&  storageActionsets.length > 0){
+        actionSets = JSON.parse(storageActionsets).map(actionsetJSON => {
+            let actionset:ActionSet = actionsetJSON;
+            actionset.actions = actionset.actions.map(actionJSON => {
+                let action:NodeAction = $.extend(new NodeAction(), actionJSON);
+                action.preconditions = $.extend(new WorldState(), actionJSON.preconditions);
+                action.effects = $.extend(new WorldState(), actionJSON.effects);
+                return action;
+            });
+            return actionset;
+        });
+    }
+}
+
+function saveDataToQuerystring(){
+    window.location.href = window.location.href.split('?')[0] + "?initialStateJSON=" + encodeURIComponent(JSON.stringify(initialStateJSON)) 
+                                                            + "&goalStateJSON=" + encodeURIComponent(JSON.stringify(goalStateJSON))
+                                                            + "&actionsets=" + encodeURIComponent(JSON.stringify(actionSets));
 }
 
 function runSearch(actionset:ActionSet) {

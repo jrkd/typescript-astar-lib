@@ -17555,7 +17555,13 @@ let goalStateJSON = {
     }
 };
 $(function () {
-    loadDataFromStorage();
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("initialStateJSON")) {
+        loadDataFromQuerystring();
+    }
+    else {
+        loadDataFromStorage();
+    }
     intitialWorldStateEditor = new JSONEditor($(".initial-world-state")[0], $.extend(editableOptions, { "name": "Initial world state" }));
     intitialWorldStateEditor.set(initialStateJSON);
     goalWorldStateEditor = new JSONEditor($(".goal-world-state")[0], $.extend(goalOptions, { "name": "Goal world state" }));
@@ -17569,6 +17575,10 @@ $(function () {
     //actions = setupActions();
     //renderActions(actions);
     renderActionsets(actionSets);
+    $("#saveCurrent").click((e) => {
+        e.preventDefault();
+        saveDataToQuerystring();
+    });
     $(".run-search").click(() => {
         updateDataFromPage();
         const currentActionset = getCurrentActionset();
@@ -17662,6 +17672,35 @@ function loadDataFromStorage() {
             return actionset;
         });
     }
+}
+function loadDataFromQuerystring() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const stoageInitialStateJSON = decodeURIComponent(urlParams.get('initialStateJSON'));
+    if (stoageInitialStateJSON != null && stoageInitialStateJSON.length > 0) {
+        initialStateJSON = JSON.parse(stoageInitialStateJSON);
+    }
+    const storageGoalStateJSON = decodeURIComponent(urlParams.get("goalStateJSON"));
+    if (storageGoalStateJSON != null && storageGoalStateJSON.length > 0) {
+        goalStateJSON = JSON.parse(storageGoalStateJSON);
+    }
+    const storageActionsets = decodeURIComponent(urlParams.get("actionsets"));
+    if (storageActionsets != null && storageActionsets.length > 0) {
+        actionSets = JSON.parse(storageActionsets).map(actionsetJSON => {
+            let actionset = actionsetJSON;
+            actionset.actions = actionset.actions.map(actionJSON => {
+                let action = $.extend(new new_astar_1.NodeAction(), actionJSON);
+                action.preconditions = $.extend(new new_astar_1.WorldState(), actionJSON.preconditions);
+                action.effects = $.extend(new new_astar_1.WorldState(), actionJSON.effects);
+                return action;
+            });
+            return actionset;
+        });
+    }
+}
+function saveDataToQuerystring() {
+    window.location.href = window.location.href.split('?')[0] + "?initialStateJSON=" + encodeURIComponent(JSON.stringify(initialStateJSON))
+        + "&goalStateJSON=" + encodeURIComponent(JSON.stringify(goalStateJSON))
+        + "&actionsets=" + encodeURIComponent(JSON.stringify(actionSets));
 }
 function runSearch(actionset) {
     var $plannerResults = $("#plannerList");
@@ -17820,7 +17859,7 @@ function renderActions(actionsetName, $actionList, actions) {
         addActionToHTML(actionsetName, $actionList, action.name, action.cost, action.preconditions, action.effects);
     });
 }
-function addActionToHTML(actionsetName, $actionList, name = "[New actions]", cost = 1, preconditionsJSON = {}, effectsJSON = {}) {
+function addActionToHTML(actionsetName, $actionList, name = "[New action]", cost = 1, preconditionsJSON = {}, effectsJSON = {}) {
     //const $actionList = $(".action-list");
     let actionHtml = $(".action-item-template").html();
     actionHtml = actionHtml.split("{{index}}").join($actionList.children().length.toString());
