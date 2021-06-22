@@ -108,6 +108,7 @@ $(function() {
 
     $("#saveCurrent").click((e)=>{
         e.preventDefault();
+        updateDataFromPage();
         saveDataToQuerystring();
     });
     $(".run-search").click(()=>{
