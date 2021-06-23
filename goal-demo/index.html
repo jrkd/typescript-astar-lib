@@ -2,74 +2,86 @@
 <html>
 	<head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="HandheldFriendly" content="true">
 
         <title>Demo - JavaScript A* Search Algorithm</title>
 		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
 		<link rel="stylesheet" type="text/css" media="screen, projection" href="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.5.0/jsoneditor.css" />
-		<link rel="stylesheet" type="text/css" media="screen, projection" href="/demo.css" />
 	</head>
 <body>
 	<div class="page-body pb-5">
-		<nav class="navbar navbar-expand-lg navbar-light bg-light">
-			<div class="container-fluid">
-				<a class="navbar-brand" href="#">javascript-astar</a>
-				<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-				<span class="navbar-toggler-icon"></span>
-				</button>
-				<div class="collapse navbar-collapse" id="navbarSupportedContent">
-				<ul class="navbar-nav me-auto mb-2 mb-lg-0">
-					<li class="nav-item">
-					<a class="nav-link active" aria-current="page" href="/index.html">Home</a>
-					</li>
-					<li class="nav-item">
-					<a class="nav-link" href="http://www.briangrinstead.com/blog/astar-search-algorithm-in-javascript-updated" tabindex="-1">Article</a>
-					</li>
-					<li class="nav-item">
-					<a class="nav-link" href="#save-to-url" id="saveCurrent" tabindex="-1">Save current as url</a>
-					</li>
-				</ul>
+		<div class="container">
+			<nav class="navbar navbar-expand-lg navbar-light bg-light">
+				<div class="container-fluid">
+					<a class="navbar-brand" href="#">Goal oriented action planning prototype</a>
+					<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+					<span class="navbar-toggler-icon"></span>
+					</button>
+					<div class="collapse navbar-collapse" id="navbarSupportedContent">
+					<ul class="navbar-nav me-auto mb-2 mb-lg-0">
+						<li class="nav-item">
+						<a class="nav-link active" aria-current="page" href="/index.html">Home</a>
+						</li>
+							<li class="nav-item">
+						<a class="nav-link" href="https://alumni.media.mit.edu/~jorkin/gdc2006_orkin_jeff_fear.pdf" tabindex="-1">Three states and a plan paper - Jeff Orkin</a>
+						</li>
+						<li class="nav-item">
+						<a class="nav-link" href="//github.com/jrkd/typescript-astar-lib" id="saveCurrent" tabindex="-1">Github repo</a>
+						</li>
+					</ul>
+					</div>
+				</div>
+			</nav>
+		</div>
+		<div class="container">
+			<div class="row justify-content-end">
+				<div class="col-auto">
+					<a class="btn btn-outline-dark" href="#save-to-url" id="saveCurrent" tabindex="-1">Save current as url</a>
 				</div>
 			</div>
-		</nav>
-		<div class="container">
+		</div>
+		<div class="container border-bottom pb-3 mb-3">
 			<div class="row">
-				<div class="col-6">
-					
-					<div class="row">
-						<div class="col-6">
-							<h4>Current state of the world</h4>
-							<div class="form-control form-control-sm initial-world-state"></div>
-						</div>
-						<div class="col-6">
-							<h4>Goals that we'd like to reach</h4>
-							<p>Ordered from most to least important</p>
-							<div  class="form-control form-control-sm goal-world-state"></div>
-						</div>
-					</div>
-
+				<div class="col-12 col-md-6 mt-3 mt-sm-0">
+					<h4>Current state of the world</h4>
+					<div class="form-control form-control-sm initial-world-state"></div>
 				</div>
-				<div class="col-6">
-					<div class="row">
-						<div class="col">
-							<h4><button type="button" id="addAction" class="btn btn-secondary">Add new action</button></h4>
-						</div>
-						<div class="col-auto">
-							<h4><button type="button" id="addActionList" class="btn btn-secondary">Add new action list</button></h4>
-						</div>
-						<div class="col-auto">
-							<ul class="nav nav-tabs" id="myTab" role="tablist">
-								<li class="nav-item dropdown">
-									<a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">Select action list</a>
-									<ul class="dropdown-menu" id="actionset-names-dropdown">
-										<!-- where the tab dropdown item template gets populated -->
-									</ul>
-									<script type="text/template" class="actionset-tab-template">
-										<li class="name-item" role="presentation"><a class="dropdown-item" id="actionset-{{name}}-tab" data-bs-toggle="tab" data-bs-target="#actionset-{{name}}" type="button" role="tab" aria-controls="actionset-{{name}}" aria-selected="false">{{name}}</a></li>
-									</script>
-								</li>
+				<div class="col-12 col-md-6 mt-3 mt-sm-0">
+					<h4>Goals that we'd like to reach</h4>
+					<p>Ordered from most to least important</p>
+					<div  class="form-control form-control-sm goal-world-state"></div>
+				</div>
+			</div>
+		</div>
+
+		<div class="container border-bottom pb-3 mb-3">
+			<div class="row">
+				<div class="col-12 col-md-9" >
+					<h3>Available actions</h3>
+					<p>Actions each agent type can utlilize to complete the list of goals</p>
+				</div>
+				<div class="col-12 col-md-3">
+					<ul class="nav nav-pills flex-column nav-fill" id="myTab" role="tablist">
+						<li class="nav-item dropdown">
+							<a class="nav-link dropdown-toggle active" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">Select action list</a>
+							<ul class="dropdown-menu" id="actionset-names-dropdown">
+								<!-- where the tab dropdown item template gets populated -->
 							</ul>
-						</div>
-					</div>
+							<script type="text/template" class="actionset-tab-template">
+								<li class="name-item" role="presentation"><a class="dropdown-item" id="actionset-{{name}}-tab" data-bs-toggle="tab" data-bs-target="#actionset-{{name}}" type="button" role="tab" aria-controls="actionset-{{name}}" aria-selected="false">{{name}}</a></li>
+							</script>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" id="addAction" href="#">Add new action</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" id="addActionList" href="#">Add new agent</a>
+						</li>
+					</ul>
+				</div>
+				<div class="col-12 col-md-10 col-lg-8">
+					
 					
 					
 					<div class="tab-content" id="myTabContent">
@@ -82,7 +94,11 @@
 					<script type="text/template" class="actionset-tab-content-template">
 						<div class="tab-pane fade actionset-container" id="actionset-{{name}}" role="tabpanel" aria-labelledby="actionset-{{name}}-tab">
 							
-							<h4>Actions for <input type="text" oninput="this.reportValidity()"  pattern="[a-zA-Z\-]*$" id="actionset-{{name}}-name" class="form-control actionset-name" value="{{name}}"></h4>
+							<div class="row mb-3 g-2">
+								<div class="col-auto"><span class="h4 mt-3">Actions for </span></div>
+								<div class="col-auto"><input type="text" oninput="this.reportValidity()"  pattern="[a-zA-Z\-]*$" id="actionset-{{name}}-name" class="form-control actionset-name" value="{{name}}"></div>
+							</div>
+							
 							<div class="accordion action-list overflow-auto" id="actions-{{name}}-accordion" style="max-height: 425px;">
 								<!-- Where the action item template gets populated -->
 							</div>
@@ -109,13 +125,13 @@
 								  </div>
 						
 								<div class="row">
-									<div class="col-6">
-									  <h4>Preconditions</h4>
+									<div class="col-12 col-md-6">
+									  <h4 class="mt-3">Preconditions</h4>
 									  <div class="action-preconditions">{{preconditions}}</div>
 									  <!-- <textarea class="form-control form-control-sm" rows="3"></textarea> -->
 									</div>
-									<div class="col-6">
-									  <h4>Effects</h4>
+									<div class="col-12 col-md-6">
+									  <h4 class="mt-3">Effects</h4>
 									  <div class="action-effects">{{effects}}</div>
 									  <!-- <textarea class="form-control form-control-sm" rows="3"></textarea> -->
 									</div>
@@ -128,37 +144,48 @@
 			</div>
 		</div>
 		<div class="container">
-			<div class="row">
-				<div class="col-12" >
-					<h3>Plan of action <button type="button" class="btn btn-outline-primary btn-lg run-search" >Find a plan</button></h3>
+			<div class="row justify-content-end">
+				<div class="col-12 col-md-8 col-lg-10 ">
+					<h3>Planning</h3>
 					<p>This is the series of actions we'd take to get from the initial state of the world to the desired goal.</p>
-					
-					
+				</div>
+				<div class="col-12 offset-md-1 col-md-3 offset-lg-0 col-lg-2">
+					<button type="button" class="btn btn-outline-primary btn-lg run-search" >Find a plan</button>
 				</div>
 			</div>
-			<div class="plan-list-results">
-				<!-- this is where .plan-template gets populated -->
-			</div>
-			<script type="text/template" class="plan-template">
-				<h5>Using <mark>{{actionsetname}}'s</mark> actions</h5>
-				<div class="goalDetails">{{goalDetailsHTML}}</div>
-				<div class="row m-2" >
-					<div class="col-4">
-						<div class="list-group list-group-numbered overflow-auto plannerList" role="tablist" style="max-height: 280px;">
-						</div>
+			
+		</div>
+		<div class="container border-bottom pb-3 mb-3">
+			<div class="row">
+				<div class="col-12">
+					<div class="plan-list-results">
+						<!-- this is where .plan-template gets populated -->
 					</div>
-					<div class="col-8">
-						<div class="tab-content plannerDetailList">
+					<script type="text/template" class="plan-template">
+						<div class="border-top border-bottom">
+							<h5 class="mt-3 mb-3">Using <mark>{{actionsetname}}'s</mark> actions</h5>
+							<div class="goalDetails">{{goalDetailsHTML}}</div>
+							<div class="row m-2" >
+								<div class="col-12 col-md-4">
+									<div class="list-group list-group-numbered overflow-auto plannerList" role="tablist" style="max-height: 280px;">
+									</div>
+								</div>
+								<div class="col-12 col-md-8">
+									<div class="tab-content plannerDetailList">
+									</div>
+								</div>
+							</div>
 						</div>
-					</div>
+						
+					</script>
+					<script type="text/template" class="plan-unmet-goal">
+						<p><s>Unable to meet <mark> {{goalName}}</mark> goal</s></p>
+					</script>
+					<script type="text/template" class="plan-met-goal">
+						<p>Plan to get to goal with <mark>{{goalName}}</mark></p>
+					</script>
 				</div>
-			</script>
-			<script type="text/template" class="plan-unmet-goal">
-				<p>Unable to meet <mark> {{goalName}}</mark> goal</p>
-			</script>
-			<script type="text/template" class="plan-met-goal">
-				<p>Plan to get to goal with <mark>{{goalName}}</mark></p>
-			</script>
+			</div>
 		</div>
 	</div>
 	<script type="text/template" id="plan-item-template">
@@ -166,7 +193,7 @@
 	</script>
 	<script type="text/template" class="plan-item-detail-template">
 		<div class="tab-pane fade" id="list-{{actionsetName}}-{{index}}" role="tabpanel" aria-labelledby="list-{{actionsetName}}-{{index}}-list">
-			<h5>Using action <span class="mark">{{actionName}}</span></h5>
+			<h5 class="mt-3">Using action <span class="mark">{{actionName}}</span></h5>
 			<div class="row">
 				<div class="col-6">
 					<p>Applying the following effects to the world:</p>

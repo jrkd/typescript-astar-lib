@@ -17577,6 +17577,7 @@ $(function () {
     renderActionsets(actionSets);
     $("#saveCurrent").click((e) => {
         e.preventDefault();
+        updateDataFromPage();
         saveDataToQuerystring();
     });
     $(".run-search").click(() => {
