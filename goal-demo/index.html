@@ -143,50 +143,90 @@
 				</div>
 			</div>
 		</div>
-		<div class="container">
+		<div class="container border-bottom pb-3 mb-3">
 			<div class="row justify-content-end">
 				<div class="col-12 col-md-8 col-lg-10 ">
 					<h3>Planning</h3>
 					<p>This is the series of actions we'd take to get from the initial state of the world to the desired goal.</p>
+					
 				</div>
 				<div class="col-12 offset-md-1 col-md-3 offset-lg-0 col-lg-2">
 					<button type="button" class="btn btn-outline-primary btn-lg run-search" >Find a plan</button>
+					<button class="btn btn-outline-dark btn-sm p-2 mt-2 mb-2" type="button" data-bs-toggle="collapse" data-bs-target="#planningInfo" aria-expanded="false" aria-controls="planningInfo">
+						Show/hide info
+					  </button>
 				</div>
 			</div>
-			
-		</div>
-		<div class="container border-bottom pb-3 mb-3">
-			<div class="row">
-				<div class="col-12">
-					<div class="plan-list-results">
-						<!-- this is where .plan-template gets populated -->
-					</div>
-					<script type="text/template" class="plan-template">
-						<div class="border-top border-bottom">
-							<h5 class="mt-3 mb-3">Using <mark>{{actionsetname}}'s</mark> actions</h5>
-							<div class="goalDetails">{{goalDetailsHTML}}</div>
-							<div class="row m-2" >
-								<div class="col-12 col-md-4">
-									<div class="list-group list-group-numbered overflow-auto plannerList" role="tablist" style="max-height: 280px;">
+			<div id="planningInfo" class="container border-bottom pb-3 mb-3 collapse show">
+				<div class="row">
+					<div class="col-12">
+						<div class="plan-list-results">
+							<!-- this is where .plan-template gets populated -->
+						</div>
+						<script type="text/template" class="plan-template">
+							<div class="border-top border-bottom">
+								<h5 class="mt-3 mb-3">Using <mark>{{actionsetname}}'s</mark> actions</h5>
+								<div class="goalDetails">{{goalDetailsHTML}}</div>
+								<div class="row m-2" >
+									<div class="col-12 col-md-4">
+										<div class="list-group list-group-numbered overflow-auto plannerList" role="tablist" style="max-height: 280px;">
+										</div>
 									</div>
-								</div>
-								<div class="col-12 col-md-8">
-									<div class="tab-content plannerDetailList">
+									<div class="col-12 col-md-8">
+										<div class="tab-content plannerDetailList">
+										</div>
 									</div>
 								</div>
 							</div>
-						</div>
-						
-					</script>
-					<script type="text/template" class="plan-unmet-goal">
-						<p><s>Unable to meet <mark> {{goalName}}</mark> goal</s></p>
-					</script>
-					<script type="text/template" class="plan-met-goal">
-						<p>Plan to get to goal with <mark>{{goalName}}</mark></p>
-					</script>
+							
+						</script>
+						<script type="text/template" class="plan-unmet-goal">
+							<p><s>Unable to meet <mark> {{goalName}}</mark> goal</s></p>
+						</script>
+						<script type="text/template" class="plan-met-goal">
+							<p>Plan to get to goal with <mark>{{goalName}}</mark></p>
+						</script>
+					</div>
 				</div>
 			</div>
 		</div>
+		<div class="container border-bottom pb-3 mb-3">
+			<div class="row justify-content-end">
+				<div class="col-12 col-md-8 col-lg-10 ">
+					<h3>Plan Execution, moving through time ⏳</h3>
+					<p>Each agent will take turns checking their plan is still valid, changing the world state with their actions, and replanning if their plan is no longer valid</p>
+				</div>
+				<div class="col-12 offset-md-1 col-md-3 offset-lg-0 col-lg-2">
+					<button type="button" class="btn btn-outline-primary btn-lg" id="nextStep" >Next Step</button>
+				</div>
+			</div>
+			<div class="container border-bottom pb-3 mb-3 collapse show">
+				<div class="row">
+					<div class="col-12">
+						<h4>Activity Log</h4>
+						<div class="activity-log">
+							<!-- this is where activity log items would go. -->
+						</div>
+						<script type="text/template" id="activity-log-use-action-template">
+							<p class="activity-log-item">{{agentName}} is attempting to get to goal <mark>{{goalName}}</mark> using action <mark>{{actionName}}</mark></p>
+						</script>
+						<script type="text/template" id="activity-log-invalid-goal-template">
+							<p class="activity-log-item"><mark>{{agentName}}'s</mark> plan for <mark>{{goalName}}</mark> is no longer valid. Will look for a new plan.</p>
+						</script>
+						<script type="text/template" id="activity-log-complete-goal-template">
+							<p class="activity-log-item"><mark>{{agentName}}</mark> completed their plan and reached goal <mark>{{goalName}}</mark>! Will look for a new plan.</p>
+						</script>
+						<script type="text/template" id="activity-log-new-goal-template">
+							<p class="activity-log-item"><mark>{{agentName}}</mark> found a plan for <mark>{{goalName}}</mark></p>
+						</script>
+						<script type="text/template" id="activity-log-no-goals-template">
+							<p class="activity-log-item"><mark>{{agentName}}</mark> cannot find any valid plans.</mark></p>
+						</script>
+					</div>
+				</div>
+			</div>
+		</div>
+		
 	</div>
 	<script type="text/template" id="plan-item-template">
 		<a class="list-group-item list-group-item-action" id="list-{{actionsetName}}-{{index}}-list" data-bs-toggle="list" href="#list-{{actionsetName}}-{{index}}" role="tab" aria-controls="list-{{actionsetName}}-{{index}}">{{index}}. {{actionName}}</a>

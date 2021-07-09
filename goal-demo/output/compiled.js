@@ -17511,7 +17511,7 @@ let jsonFormatterOptions = {
     animateClose: true,
     useToJSON: true
 };
-let initialStateJSON = {
+let initialStateJSONx = {
     "hungry": true,
     "moneyWithMe": 0,
     "numFoodRecipes": 0,
@@ -17523,6 +17523,19 @@ let initialStateJSON = {
     "myPosX": 0,
     "myPosY": 0
 };
+let currentWorldState = new new_astar_1.WorldState();
+currentWorldState = $.extend(currentWorldState, {
+    "hungry": true,
+    "moneyWithMe": 0,
+    "numFoodRecipes": 0,
+    "moneyAtBank": 5,
+    "bankPosX": 5,
+    "bankPosY": 5,
+    "numBread": 0,
+    "numCheese": 0,
+    "myPosX": 0,
+    "myPosY": 0
+});
 const editableOptions = {
     "search": false,
     "mainMenuBar": false,
@@ -17542,6 +17555,9 @@ const goalOptions = {
 };
 //var actions: NodeAction[];
 class ActionSet {
+    constructor() {
+        this.currentActionPlan = [];
+    }
 }
 ;
 let actionSets = [];
@@ -17554,6 +17570,7 @@ let goalStateJSON = {
         "isHungry": false
     }
 };
+let nextActionsetTurnIndex = 0;
 $(function () {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get("initialStateJSON")) {
@@ -17563,7 +17580,7 @@ $(function () {
         loadDataFromStorage();
     }
     intitialWorldStateEditor = new JSONEditor($(".initial-world-state")[0], $.extend(editableOptions, { "name": "Initial world state" }));
-    intitialWorldStateEditor.set(initialStateJSON);
+    intitialWorldStateEditor.set(currentWorldState);
     goalWorldStateEditor = new JSONEditor($(".goal-world-state")[0], $.extend(goalOptions, { "name": "Goal world state" }));
     goalWorldStateEditor.set(goalStateJSON);
     // $(".initial-world-state").append(new JSONFormatter(initialStateJSON, 1, jsonFormatterOptions).render());
@@ -17601,13 +17618,78 @@ $(function () {
         actionSets.push(newActionSet);
         renderActionsets(actionSets);
     });
+    $("#nextStep").click(() => {
+        //updateDataFromPage();
+        let currentActionset = actionSets[nextActionsetTurnIndex];
+        implementPlanWithAction(currentActionset);
+        //loop back around to the first actionset if at the end of list.
+        nextActionsetTurnIndex = nextActionsetTurnIndex + 1;
+        if (nextActionsetTurnIndex >= actionSets.length) {
+            nextActionsetTurnIndex = 0;
+        }
+        intitialWorldStateEditor.set(currentWorldState);
+    });
     $('body').on('click', '.delete-action', (e) => {
         $(e.currentTarget).closest(".accordion-item").remove();
     });
 });
+function implementPlanWithAction(actionset) {
+    if (actionset.currentGoal && actionset.currentGoal.containedWithin(currentWorldState)) {
+        //goal complete!
+        logNewActivity("#activity-log-complete-goal-template", "", actionset.currentGoalName, actionset.name);
+        actionset.currentGoalName = "";
+        actionset.currentActionPlan = [];
+        actionset.currentGoal = null;
+        runSearch(actionset);
+    }
+    if (actionset.currentActionPlan.length == 0) {
+        runSearch(actionset);
+    }
+    let actionToApply = null;
+    if (actionset.currentActionPlan && actionset.currentActionPlan.length > 0) {
+        actionToApply = actionset.currentActionPlan[0].action;
+    }
+    else {
+        logNewActivity("#activity-log-no-goals-template", "", "", actionset.name);
+    }
+    if (actionToApply
+        && actionToApply.preconditions.containedWithin(currentWorldState) //check action's preconditions are still met. 
+        // and from the current world state, can we still get to the goal by applying the whole list of actions?
+        && checkPlanIsValidFromCurrentState(currentWorldState, actionset.currentGoal, actionset.currentActionPlan)) {
+        logNewActivity("#activity-log-use-action-template", actionToApply.name, actionset.currentGoalName, actionset.name);
+        currentWorldState = actionToApply.effects.applyTo(currentWorldState);
+        actionset.currentActionPlan = actionset.currentActionPlan.slice(1); //remove current action from front of action plan.
+    }
+    else {
+        //Log #activity-log-invalid-goal-template
+        logNewActivity("#activity-log-invalid-goal-template", "", actionset.currentGoalName, actionset.name);
+        runSearch(actionset);
+        if (actionset.currentGoalName) {
+            //log #activity-log-new-goal-template
+            logNewActivity("#activity-log-new-goal-template", "", actionset.currentGoalName, actionset.name);
+        }
+        else {
+            //#activity-log-no-goals-template
+            logNewActivity("#activity-log-no-goals-template", "", "", actionset.name);
+        }
+    }
+}
+function checkPlanIsValidFromCurrentState(currentWorld, goalWorld, actionPlan) {
+    let isValid = true;
+    return isValid;
+}
+function logNewActivity(activityLogItemTemplateSelector, actionName, goalName, agentName) {
+    let $itemTemplate = $(activityLogItemTemplateSelector);
+    let activtyHTML = $itemTemplate.html();
+    activtyHTML = activtyHTML.split("{{actionName}}").join(actionName);
+    activtyHTML = activtyHTML.split("{{goalName}}").join(goalName);
+    activtyHTML = activtyHTML.split("{{agentName}}").join(agentName);
+    $(".activity-log").append(activtyHTML);
+}
 function updateDataFromPage() {
     //set initial and goal state based on current 
-    initialStateJSON = intitialWorldStateEditor.get();
+    currentWorldState = new new_astar_1.WorldState();
+    currentWorldState = $.extend(currentWorldState, intitialWorldStateEditor.get());
     goalStateJSON = goalWorldStateEditor.get();
     actionSets = [];
     $(".actionset-container").each((index, actionsetContainer) => {
@@ -17639,7 +17721,7 @@ function updateDataFromPage() {
         //let $actionsetNameInput = $(`#actionset-${currentActionset.name}-name`);
         //currentActionset.name = $actionsetNameInput.val().toString();
     });
-    saveDataToStorage(initialStateJSON, goalStateJSON, actionSets);
+    saveDataToStorage(currentWorldState, goalStateJSON, actionSets);
     renderActionsets(actionSets);
 }
 function getCurrentActionset() {
@@ -17654,7 +17736,8 @@ function saveDataToStorage(initialStateJSON, goalStateJSON, actionSets) {
 function loadDataFromStorage() {
     const stoageInitialStateJSON = window.localStorage.getItem("initialStateJSON");
     if (stoageInitialStateJSON != null && stoageInitialStateJSON.length > 0) {
-        initialStateJSON = JSON.parse(stoageInitialStateJSON);
+        currentWorldState = new new_astar_1.WorldState();
+        currentWorldState = $.extend(currentWorldState, JSON.parse(stoageInitialStateJSON));
     }
     const storageGoalStateJSON = window.localStorage.getItem("goalStateJSON");
     if (storageGoalStateJSON != null && storageGoalStateJSON.length > 0) {
@@ -17678,7 +17761,8 @@ function loadDataFromQuerystring() {
     const urlParams = new URLSearchParams(window.location.search);
     const stoageInitialStateJSON = decodeURIComponent(urlParams.get('initialStateJSON'));
     if (stoageInitialStateJSON != null && stoageInitialStateJSON.length > 0) {
-        initialStateJSON = JSON.parse(stoageInitialStateJSON);
+        currentWorldState = new new_astar_1.WorldState();
+        currentWorldState = $.extend(currentWorldState, JSON.parse(stoageInitialStateJSON));
     }
     const storageGoalStateJSON = decodeURIComponent(urlParams.get("goalStateJSON"));
     if (storageGoalStateJSON != null && storageGoalStateJSON.length > 0) {
@@ -17699,7 +17783,7 @@ function loadDataFromQuerystring() {
     }
 }
 function saveDataToQuerystring() {
-    window.location.href = window.location.href.split('?')[0] + "?initialStateJSON=" + encodeURIComponent(JSON.stringify(initialStateJSON))
+    window.location.href = window.location.href.split('?')[0] + "?initialStateJSON=" + encodeURIComponent(JSON.stringify(currentWorldState))
         + "&goalStateJSON=" + encodeURIComponent(JSON.stringify(goalStateJSON))
         + "&actionsets=" + encodeURIComponent(JSON.stringify(actionSets));
 }
@@ -17709,8 +17793,7 @@ function runSearch(actionset) {
     var planner = new new_astar_1.Planner();
     planner.actions = actionset.actions;
     //setup current state
-    let startState = new new_astar_1.WorldState();
-    $.extend(startState, initialStateJSON);
+    let startState = currentWorldState;
     let startNode = new new_astar_1.GoalNode();
     startNode.state = startState;
     let results = []; //AStar.search(planner, startNode, goalNode, {});
@@ -17722,10 +17805,16 @@ function runSearch(actionset) {
         let goalJSON = goalStateJSON[goalName];
         let goalState = new new_astar_1.WorldState();
         $.extend(goalState, goalJSON);
+        actionset.currentGoal = null;
+        actionset.currentGoalName = "";
+        actionset.currentActionPlan = [];
         let goalResults = runSearchForGoal(actionset.actions, startState, goalState);
         if (goalResults.length > 0) {
             results = goalResults;
             metGoalName = goalName;
+            actionset.currentGoal = goalState;
+            actionset.currentActionPlan = goalResults;
+            actionset.currentGoalName = goalName;
             break;
         }
         else {
