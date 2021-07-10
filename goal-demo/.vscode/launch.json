@@ -9,7 +9,6 @@
             "type": "chrome",
             "request": "launch",
             "name": "Launch with chrome",
-            "url": "http://localhost:81/",
             "webRoot": "${workspaceRoot}",
             "sourceMaps": true,
             "trace": true,
@@ -17,6 +16,7 @@
             "sourceMapPathOverrides": {
                 "webpack:///./*": "${webRoot}/*"
             },
+            "url": "http://localhost:80",
             "runtimeExecutable": "C:/Program Files/Chromium/Application/chrome.exe"
         }
     ]

@@ -17634,44 +17634,40 @@ $(function () {
     });
 });
 function implementPlanWithAction(actionset) {
-    if (actionset.currentGoal && actionset.currentGoal.containedWithin(currentWorldState)) {
-        //goal complete!
+    //The goal & actions can be in these states: 
+    //1. plan has completed successfully. (runSearch)
+    //2. no plans and actions exist.  (runSearch)
+    //3. plan does exist, but now its invalid. (runSearch)
+    //4. plan is in progress
+    //
+    const goalAndActionsExist = actionset.currentGoal && (actionset.currentActionPlan !== undefined && actionset.currentActionPlan !== null);
+    const planWasSuccessful = actionset.currentGoal && actionset.currentGoal.containedWithin(currentWorldState);
+    const planIsValid = goalAndActionsExist
+        && !planWasSuccessful
+        && actionset.currentActionPlan.length > 0
+        && actionset.currentActionPlan[0].action.preconditions.containedWithin(currentWorldState) //check action's preconditions are still met. 
+        && checkPlanIsValidFromCurrentState(currentWorldState, actionset.currentGoal, actionset.currentActionPlan);
+    // and from the current world state, can we still get to the goal by applying the whole list of actions?
+    if (!goalAndActionsExist) {
+        logNewActivity("#activity-log-no-goals-template", "", "", actionset.name);
+    }
+    else if (planWasSuccessful) {
         logNewActivity("#activity-log-complete-goal-template", "", actionset.currentGoalName, actionset.name);
+    }
+    else if (!planIsValid) {
+        logNewActivity("#activity-log-invalid-goal-template", "", actionset.currentGoalName, actionset.name);
+    }
+    if (planIsValid) {
+        logNewActivity("#activity-log-use-action-template", actionset.currentActionPlan[0].action.name, actionset.currentGoalName, actionset.name);
+        currentWorldState = actionset.currentActionPlan[0].action.effects.applyTo(currentWorldState);
+        actionset.currentActionPlan = actionset.currentActionPlan.slice(1); //remove current action from front of action plan.
+    }
+    if (!goalAndActionsExist || !planIsValid || planWasSuccessful) {
+        //run a new search.
         actionset.currentGoalName = "";
         actionset.currentActionPlan = [];
         actionset.currentGoal = null;
         runSearch(actionset);
-    }
-    if (actionset.currentActionPlan.length == 0) {
-        runSearch(actionset);
-    }
-    let actionToApply = null;
-    if (actionset.currentActionPlan && actionset.currentActionPlan.length > 0) {
-        actionToApply = actionset.currentActionPlan[0].action;
-    }
-    else {
-        logNewActivity("#activity-log-no-goals-template", "", "", actionset.name);
-    }
-    if (actionToApply
-        && actionToApply.preconditions.containedWithin(currentWorldState) //check action's preconditions are still met. 
-        // and from the current world state, can we still get to the goal by applying the whole list of actions?
-        && checkPlanIsValidFromCurrentState(currentWorldState, actionset.currentGoal, actionset.currentActionPlan)) {
-        logNewActivity("#activity-log-use-action-template", actionToApply.name, actionset.currentGoalName, actionset.name);
-        currentWorldState = actionToApply.effects.applyTo(currentWorldState);
-        actionset.currentActionPlan = actionset.currentActionPlan.slice(1); //remove current action from front of action plan.
-    }
-    else {
-        //Log #activity-log-invalid-goal-template
-        logNewActivity("#activity-log-invalid-goal-template", "", actionset.currentGoalName, actionset.name);
-        runSearch(actionset);
-        if (actionset.currentGoalName) {
-            //log #activity-log-new-goal-template
-            logNewActivity("#activity-log-new-goal-template", "", actionset.currentGoalName, actionset.name);
-        }
-        else {
-            //#activity-log-no-goals-template
-            logNewActivity("#activity-log-no-goals-template", "", "", actionset.name);
-        }
     }
 }
 function checkPlanIsValidFromCurrentState(currentWorld, goalWorld, actionPlan) {
