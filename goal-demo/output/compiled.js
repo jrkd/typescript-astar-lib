@@ -17619,7 +17619,7 @@ $(function () {
         renderActionsets(actionSets);
     });
     $("#nextStep").click(() => {
-        //updateDataFromPage();
+        updateWorldStatesFromPage();
         let currentActionset = actionSets[nextActionsetTurnIndex];
         implementPlanWithAction(currentActionset);
         //loop back around to the first actionset if at the end of list.
@@ -17684,9 +17684,7 @@ function logNewActivity(activityLogItemTemplateSelector, actionName, goalName, a
 }
 function updateDataFromPage() {
     //set initial and goal state based on current 
-    currentWorldState = new new_astar_1.WorldState();
-    currentWorldState = $.extend(currentWorldState, intitialWorldStateEditor.get());
-    goalStateJSON = goalWorldStateEditor.get();
+    updateWorldStatesFromPage();
     actionSets = [];
     $(".actionset-container").each((index, actionsetContainer) => {
         const actionsetName = $(actionsetContainer).find(".actionset-name").val().toString();
@@ -17719,6 +17717,11 @@ function updateDataFromPage() {
     });
     saveDataToStorage(currentWorldState, goalStateJSON, actionSets);
     renderActionsets(actionSets);
+}
+function updateWorldStatesFromPage() {
+    currentWorldState = new new_astar_1.WorldState();
+    currentWorldState = $.extend(currentWorldState, intitialWorldStateEditor.get());
+    goalStateJSON = goalWorldStateEditor.get();
 }
 function getCurrentActionset() {
     let actionsetName = $($("#actionset-names-dropdown .active")[0]).text();
