@@ -60,11 +60,11 @@ const editableOptions = {
     "mainMenuBar": false,
     "navigationBar": false, 
     "limitDragging": true,
-    "onCreateMenu": (items, context) =>{
-        return items.filter( (el, _) => {
-            return el.text == "Append" || el.text == "Remove"
-        }).map((el) => { delete el.submenu;return el;});
-    }
+    // "onCreateMenu": (items, context) =>{
+    //     return items.filter( (el, _) => {
+    //         return el.text == "Append" || el.text == "Remove"
+    //     }).map((el) => { delete el.submenu;return el;});
+    // }
   };
 
   

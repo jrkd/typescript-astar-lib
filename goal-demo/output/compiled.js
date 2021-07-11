@@ -17541,11 +17541,6 @@ const editableOptions = {
     "mainMenuBar": false,
     "navigationBar": false,
     "limitDragging": true,
-    "onCreateMenu": (items, context) => {
-        return items.filter((el, _) => {
-            return el.text == "Append" || el.text == "Remove";
-        }).map((el) => { delete el.submenu; return el; });
-    }
 };
 const goalOptions = {
     "search": false,
@@ -18363,15 +18358,16 @@ class WorldState {
     // Check whether this world state is contained within the state passed in.
     containedWithin(fullState) {
         //Get all of our properties. 
-        let ourKeys = Object.keys(this).filter(key => this[key] !== undefined);
-        //Check that all our keys exist in the fullState, 
-        //and the values for ours match the fullstates version of them.
-        return ourKeys.every(key => {
-            if (key.startsWith("total") || key.startsWith("num") || key.startsWith("money")) {
-                return fullState[key] >= this[key];
-            }
-            return fullState[key] === this[key];
-        });
+        // let ourKeys:string[] = Object.keys(this).filter(key => this[key] !== undefined);
+        // //Check that all our keys exist in the fullState, 
+        // //and the values for ours match the fullstates version of them.
+        // return ourKeys.every(key => {
+        //     if(key.startsWith("total") || key.startsWith("num") || key.startsWith("money")){
+        //         return fullState[key] >= this[key]; 
+        //     } 
+        //     return fullState[key] === this[key];
+        // });
+        return _.isMatch(fullState, this);
     }
     applyTo(fullState) {
         return _.mergeWith(_.cloneDeep(fullState), this, (objValue, srcValue, key, object, source, stack) => {

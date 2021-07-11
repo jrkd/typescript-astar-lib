@@ -49,16 +49,17 @@ export class WorldState{
     // Check whether this world state is contained within the state passed in.
     containedWithin(fullState:WorldState):boolean{
         //Get all of our properties. 
-        let ourKeys:string[] = Object.keys(this).filter(key => this[key] !== undefined);
+        // let ourKeys:string[] = Object.keys(this).filter(key => this[key] !== undefined);
 
-        //Check that all our keys exist in the fullState, 
-        //and the values for ours match the fullstates version of them.
-        return ourKeys.every(key => {
-            if(key.startsWith("total") || key.startsWith("num") || key.startsWith("money")){
-                return fullState[key] >= this[key]; 
-            } 
-            return fullState[key] === this[key];
-        });
+        // //Check that all our keys exist in the fullState, 
+        // //and the values for ours match the fullstates version of them.
+        // return ourKeys.every(key => {
+        //     if(key.startsWith("total") || key.startsWith("num") || key.startsWith("money")){
+        //         return fullState[key] >= this[key]; 
+        //     } 
+        //     return fullState[key] === this[key];
+        // });
+        return _.isMatch(fullState, this);
     } 
 
     applyTo(fullState:WorldState):WorldState{
