@@ -17503,7 +17503,7 @@ const JSONEditor = __webpack_require__(16);
 */
 /* global Graph, astar, $ */
 let jsonFormatterOptions = {
-    hoverPreviewEnabled: false,
+    hoverPreviewEnabled: true,
     hoverPreviewArrayCount: 100,
     hoverPreviewFieldCount: 5,
     theme: '',
@@ -17566,6 +17566,7 @@ let goalStateJSON = {
     }
 };
 let nextActionsetTurnIndex = 0;
+let currentActivityIndex = 0;
 $(function () {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get("initialStateJSON")) {
@@ -17628,8 +17629,12 @@ $(function () {
         $(".actionset-container:last").addClass("active show");
     });
     $("#nextStep").click(() => {
-        updateWorldStatesFromPage();
+        updateDataFromPage();
         let currentActionset = actionSets[nextActionsetTurnIndex];
+        if (currentActivityIndex == 0) {
+            //run initital plan. 
+            actionSets.forEach(actionset => runSearch(actionset));
+        }
         implementPlanWithAction(currentActionset);
         //loop back around to the first actionset if at the end of list.
         nextActionsetTurnIndex = nextActionsetTurnIndex + 1;
@@ -17637,6 +17642,9 @@ $(function () {
             nextActionsetTurnIndex = 0;
         }
         intitialWorldStateEditor.set(currentWorldState);
+        ++currentActivityIndex;
+        $('.activity-log').scrollTop($('.activity-log')[0].scrollHeight); //keep at the bottom
+        $('html, body').scrollTop($(document).height());
     });
     $('body').on('click', '.delete-action', (e) => {
         $(e.currentTarget).closest(".accordion-item").remove();
@@ -17645,8 +17653,9 @@ $(function () {
 function addNewActionset(includeEmptyAction = true) {
     let newActionSet = new ActionSet();
     let numNewActionsetsAlready = actionSets.filter(actionset => actionset.name.startsWith("New-Actionset")).length;
-    newActionSet.name = "New-Actionset" + numNewActionsetsAlready;
+    newActionSet.name = "New-Actionset" + numNewActionsetsAlready + 1;
     newActionSet.actions = [];
+    newActionSet.disabledActions = [];
     if (includeEmptyAction) {
         newActionSet.actions = [
             new new_astar_1.NodeAction()
@@ -17655,6 +17664,14 @@ function addNewActionset(includeEmptyAction = true) {
     actionSets.push(newActionSet);
     renderActionsets(actionSets);
 }
+//If there isnt a goal
+//re-run and re-check before logging 
+//if there is a goal, and we've reached it, 
+//log then re-run for new stuff.
+//if theres a goal, and its still valid, process and log
+//if theres a goal, and the plans now invalid,
+// log that its invalid, re-run, re-log? could be valid now? could have no goals
+//feels like i should be doing the single re-run first, regardless. 
 function implementPlanWithAction(actionset) {
     //The goal & actions can be in these states: 
     //1. plan has completed successfully. (runSearch)
@@ -17662,34 +17679,41 @@ function implementPlanWithAction(actionset) {
     //3. plan does exist, but now its invalid. (runSearch)
     //4. plan is in progress
     //
-    const goalAndActionsExist = actionset.currentGoal && (actionset.currentActionPlan !== undefined && actionset.currentActionPlan !== null);
-    const planWasSuccessful = actionset.currentGoal && actionset.currentGoal.containedWithin(currentWorldState);
-    const planIsValid = goalAndActionsExist
+    let goalAndActionsExist = actionset.currentGoal && (actionset.currentActionPlan !== undefined && actionset.currentActionPlan !== null);
+    let planWasSuccessful = actionset.currentGoal && actionset.currentGoal.containedWithin(currentWorldState);
+    let planIsValid = goalAndActionsExist
         && !planWasSuccessful
         && actionset.currentActionPlan.length > 0
         && actionset.currentActionPlan[0].action.preconditions.containedWithin(currentWorldState) //check action's preconditions are still met. 
         && checkPlanIsValidFromCurrentState(currentWorldState, actionset.currentGoal, actionset.currentActionPlan);
     // and from the current world state, can we still get to the goal by applying the whole list of actions?
-    if (!goalAndActionsExist) {
-        logNewActivity("#activity-log-no-goals-template", "", "", actionset.name);
-    }
-    else if (planWasSuccessful) {
-        logNewActivity("#activity-log-complete-goal-template", "", actionset.currentGoalName, actionset.name);
-    }
-    else if (!planIsValid) {
-        logNewActivity("#activity-log-invalid-goal-template", "", actionset.currentGoalName, actionset.name);
-    }
-    if (planIsValid) {
-        logNewActivity("#activity-log-use-action-template", actionset.currentActionPlan[0].action.name, actionset.currentGoalName, actionset.name);
-        currentWorldState = actionset.currentActionPlan[0].action.effects.applyTo(currentWorldState);
-        actionset.currentActionPlan = actionset.currentActionPlan.slice(1); //remove current action from front of action plan.
-    }
     if (!goalAndActionsExist || !planIsValid || planWasSuccessful) {
         //run a new search.
         actionset.currentGoalName = "";
         actionset.currentActionPlan = [];
         actionset.currentGoal = null;
         runSearch(actionset);
+        goalAndActionsExist = actionset.currentGoal && (actionset.currentActionPlan !== undefined && actionset.currentActionPlan !== null);
+        planWasSuccessful = actionset.currentGoal && actionset.currentGoal.containedWithin(currentWorldState);
+        planIsValid = goalAndActionsExist
+            && !planWasSuccessful
+            && actionset.currentActionPlan.length > 0
+            && actionset.currentActionPlan[0].action.preconditions.containedWithin(currentWorldState) //check action's preconditions are still met. 
+            && checkPlanIsValidFromCurrentState(currentWorldState, actionset.currentGoal, actionset.currentActionPlan);
+        if (!goalAndActionsExist) {
+            logNewActivity("#activity-log-no-goals-template", "", "", actionset.name);
+        }
+        else if (planWasSuccessful) {
+            logNewActivity("#activity-log-complete-goal-template", "", actionset.currentGoalName, actionset.name);
+        }
+    }
+    if (planIsValid) {
+        logNewActivity("#activity-log-use-action-template", actionset.currentActionPlan[0].action.name, actionset.currentGoalName, actionset.name);
+        currentWorldState = actionset.currentActionPlan[0].action.effects.applyTo(currentWorldState);
+        actionset.currentActionPlan = actionset.currentActionPlan.slice(1); //remove current action from front of action plan.
+    }
+    else if (goalAndActionsExist) {
+        logNewActivity("#activity-log-invalid-goal-template", "", actionset.currentGoalName, actionset.name);
     }
 }
 function checkPlanIsValidFromCurrentState(currentWorld, goalWorld, actionPlan) {
@@ -17718,9 +17742,9 @@ function updateDataFromPage() {
         }
         //let actions = currentActionset.actions;
         currentActionset.actions = [];
+        currentActionset.disabledActions = [];
         let $actionList = $(actionsetContainer).find(`.action-list`);
         $actionList.children()
-            .filter((index, child) => $(child).find(".form-check-input").is(":checked"))
             .each((index, element) => {
             let $actionElement = $(element);
             let actionJSONEditorPreConditions = $(element).data("json-editor-preconditions");
@@ -17732,7 +17756,12 @@ function updateDataFromPage() {
             newAction.preconditions = $.extend(new new_astar_1.WorldState(), preconditionsJSON);
             let effectsJSON = actionJSONEditorEffects.get();
             newAction.effects = $.extend(new new_astar_1.WorldState(), effectsJSON);
-            currentActionset.actions.push(newAction);
+            if ($(element).find(".form-check-input").is(":checked")) {
+                currentActionset.actions.push(newAction);
+            }
+            else {
+                currentActionset.disabledActions.push(newAction);
+            }
         });
         //let $actionsetNameInput = $(`#actionset-${currentActionset.name}-name`);
         //currentActionset.name = $actionsetNameInput.val().toString();
@@ -17786,6 +17815,17 @@ function loadDataFromStorage() {
                     action.effects = $.extend(new new_astar_1.WorldState(), actionJSON.effects);
                     return action;
                 });
+                if (actionset.disabledActions) {
+                    actionset.disabledActions = actionset.disabledActions.map(actionJSON => {
+                        let action = $.extend(new new_astar_1.NodeAction(), actionJSON);
+                        action.preconditions = $.extend(new new_astar_1.WorldState(), actionJSON.preconditions);
+                        action.effects = $.extend(new new_astar_1.WorldState(), actionJSON.effects);
+                        return action;
+                    });
+                }
+                else {
+                    actionset.disabledActions = [];
+                }
                 return actionset;
             });
         }
@@ -17812,6 +17852,17 @@ function loadDataFromQuerystring() {
                 action.effects = $.extend(new new_astar_1.WorldState(), actionJSON.effects);
                 return action;
             });
+            if (actionset.disabledActions) {
+                actionset.disabledActions = actionset.disabledActions.map(actionJSON => {
+                    let action = $.extend(new new_astar_1.NodeAction(), actionJSON);
+                    action.preconditions = $.extend(new new_astar_1.WorldState(), actionJSON.preconditions);
+                    action.effects = $.extend(new new_astar_1.WorldState(), actionJSON.effects);
+                    return action;
+                });
+            }
+            else {
+                actionset.disabledActions = [];
+            }
             return actionset;
         });
     }
@@ -17967,7 +18018,7 @@ function renderActionsets(actionsets) {
         $actionsetTabContentContainer.append(actionsetTabContentHtml);
         //Once we've added the html for each action list, we populate the actions as per. 
         let $actionList = $(`#actions-${actionset.name}-accordion`);
-        renderActions(actionset.name, $actionList, actionset.actions);
+        renderActions(actionset.name, $actionList, actionset.actions, actionset.disabledActions);
         if (index == 0) {
             // $($actionsetTabContainer.find("li a.dropdown-item")).addClass("active");
             // $($actionsetTabContainer.find("li a.dropdown-item")).attr("aria-selected", "true");
@@ -17976,14 +18027,17 @@ function renderActionsets(actionsets) {
         }
     });
 }
-function renderActions(actionsetName, $actionList, actions) {
+function renderActions(actionsetName, $actionList, actions, disabledActions) {
     //const $actionList = $(".action-list");
     $actionList.empty();
     actions.forEach((action) => {
         addActionToHTML(actionsetName, $actionList, action.name, action.cost, action.preconditions, action.effects);
     });
+    disabledActions.forEach((action) => {
+        addActionToHTML(actionsetName, $actionList, action.name, action.cost, action.preconditions, action.effects, false);
+    });
 }
-function addActionToHTML(actionsetName, $actionList, name = "[New action]", cost = 1, preconditionsJSON = {}, effectsJSON = {}) {
+function addActionToHTML(actionsetName, $actionList, name = "[New action]", cost = 1, preconditionsJSON = {}, effectsJSON = {}, enabled = true) {
     //const $actionList = $(".action-list");
     let actionHtml = $(".action-item-template").html();
     actionHtml = actionHtml.split("{{index}}").join($actionList.children().length.toString());
@@ -18000,6 +18054,7 @@ function addActionToHTML(actionsetName, $actionList, name = "[New action]", cost
     let actionEffectsEditor = new JSONEditor($newAction.find(".action-effects")[0], $.extend(editableOptions, { "name": "effects" }));
     actionEffectsEditor.set(effectsJSON);
     $newAction.data("json-editor-effects", actionEffectsEditor);
+    $newAction.find(".form-check-input").prop('checked', enabled);
 }
 function addEmptyAction($actionList, actionsetName) {
     //const $actionList = $(".action-list");
@@ -18008,9 +18063,9 @@ function addEmptyAction($actionList, actionsetName) {
     actionHtml = actionHtml.split("{{name}}").join("[New action]");
     actionHtml = actionHtml.split("{{cost}}").join("1");
     actionHtml = actionHtml.split("{{actionsetName}}").join(actionsetName);
-    let preconditionsFormatted = $(new JSONFormatter({}, 1, jsonFormatterOptions).render()).html();
+    let preconditionsFormatted = $(new JSONFormatter({}).render()).html();
     actionHtml = actionHtml.split("{{preconditions}}").join("");
-    let effectsFormatted = $(new JSONFormatter({}, 1, jsonFormatterOptions).render()).html();
+    let effectsFormatted = $(new JSONFormatter({}).render()).html();
     actionHtml = actionHtml.split("{{effects}}").join("");
     $actionList.append(actionHtml);
     let $newAction = $actionList.children().last();
@@ -18033,6 +18088,10 @@ function renderPlan(startNode, results, actionset, unmetGoals, metGoalName) {
     }
     planTemplateHtml = planTemplateHtml.split("{{actionsetname}}").join(actionset.name);
     planTemplateHtml = planTemplateHtml.split("{{goalDetailsHTML}}").join(goalDetailsHTML);
+    let existingPlan = $planContainer.find(".actionset-goal-details." + actionset.name + "-goal-details"); //{{actionsetname}}-goal-details
+    if (existingPlan && existingPlan.length > 0) {
+        existingPlan.remove();
+    }
     $planContainer.append(planTemplateHtml);
     let $planActionList = $(".plannerList:last");
     let $planActionDetailList = $(".plannerDetailList:last");
@@ -18050,9 +18109,9 @@ function renderPlan(startNode, results, actionset, unmetGoals, metGoalName) {
         planActionDetailHtml = planActionDetailHtml.split("{{index}}").join(index.toString());
         planActionDetailHtml = planActionDetailHtml.split("{{actionName}}").join(result.action.name);
         planActionDetailHtml = planActionDetailHtml.split("{{actionsetName}}").join(actionset.name);
-        let actionEffectsFormatted = $(new JSONFormatter(result.action.effects, 1, jsonFormatterOptions).render()).html();
+        let actionEffectsFormatted = $(new JSONFormatter(result.action.effects, 99, jsonFormatterOptions).render()).html();
         planActionDetailHtml = planActionDetailHtml.split("{{actionEffects}}").join(actionEffectsFormatted);
-        let actionDetailFormatted = $(new JSONFormatter(currentNode.state, 1, jsonFormatterOptions).render()).html();
+        let actionDetailFormatted = $(new JSONFormatter(currentNode.state, 99, jsonFormatterOptions).render()).html();
         planActionDetailHtml = planActionDetailHtml.split("{{changedState}}").join(actionDetailFormatted);
         resultPlanActionDetails += planActionDetailHtml;
     });
