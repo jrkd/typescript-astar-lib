@@ -27,7 +27,7 @@
 						<a class="nav-link" href="https://alumni.media.mit.edu/~jorkin/gdc2006_orkin_jeff_fear.pdf" tabindex="-1">Three states and a plan paper - Jeff Orkin</a>
 						</li>
 						<li class="nav-item">
-						<a class="nav-link" href="//github.com/jrkd/typescript-astar-lib" id="saveCurrent" tabindex="-1">Github repo</a>
+						<a class="nav-link" href="//github.com/jrkd/typescript-astar-lib" tabindex="-1">Github repo</a>
 						</li>
 					</ul>
 					</div>
@@ -38,6 +38,7 @@
 			<div class="row justify-content-end">
 				<div class="col-auto">
 					<a class="btn btn-outline-dark" href="#save-to-url" id="saveCurrent" tabindex="-1">Save current as url</a>
+					<a class="btn btn-outline-dark" href="#reset" id="reset" tabindex="-1">Start from scratch</a>
 				</div>
 			</div>
 		</div>
@@ -96,7 +97,7 @@
 							
 							<div class="row mb-3 g-2">
 								<div class="col-auto"><span class="h4 mt-3">Actions for </span></div>
-								<div class="col-auto"><input type="text" oninput="this.reportValidity()"  pattern="[a-zA-Z\-]*$" id="actionset-{{name}}-name" class="form-control actionset-name" value="{{name}}"></div>
+								<div class="col-auto"><input type="text" oninput="this.reportValidity()"  pattern="[a-zA-Z\-0-9]*$" id="actionset-{{name}}-name" class="form-control actionset-name" value="{{name}}"></div>
 							</div>
 							
 							<div class="accordion action-list overflow-auto" id="actions-{{name}}-accordion" style="max-height: 425px;">

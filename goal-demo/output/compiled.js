@@ -17592,6 +17592,13 @@ $(function () {
         updateDataFromPage();
         saveDataToQuerystring();
     });
+    $("#reset").click((e) => {
+        e.preventDefault();
+        saveDataToStorage({}, {}, []);
+        loadDataFromStorage();
+        renderActionsets(actionSets);
+        renderWorldStatesOnPage();
+    });
     $(".run-search").click(() => {
         updateDataFromPage();
         const currentActionset = getCurrentActionset();
@@ -17599,19 +17606,26 @@ $(function () {
         actionSets.forEach(actionset => runSearch(actionset));
     });
     $("#addAction").click(() => {
-        const currentActionset = getCurrentActionset();
-        let $actionList = $(`#actions-${currentActionset.name}-accordion`);
+        let currentActionset = getCurrentActionset();
+        if (!currentActionset) {
+            let $firstActionsetButton = $("#actionset-names-dropdown .dropdown-item:first");
+            if ($firstActionsetButton.length == 0) {
+                addNewActionset(false);
+                $firstActionsetButton = $("#actionset-names-dropdown .dropdown-item:first");
+            }
+            $firstActionsetButton.addClass("active");
+            $(".actionset-container:first").addClass("active show");
+            currentActionset = getCurrentActionset();
+        }
+        let $actionList = $('.actionset-container.active .action-list');
         addEmptyAction($actionList, currentActionset.name);
     });
     $("#addActionList").click(() => {
         updateDataFromPage();
-        let newActionSet = new ActionSet();
-        newActionSet.name = "New-Actionset";
-        newActionSet.actions = [
-            new new_astar_1.NodeAction()
-        ];
-        actionSets.push(newActionSet);
-        renderActionsets(actionSets);
+        addNewActionset();
+        let $newActionsetButton = $("#actionset-names-dropdown .dropdown-item:last");
+        $newActionsetButton.addClass("active");
+        $(".actionset-container:last").addClass("active show");
     });
     $("#nextStep").click(() => {
         updateWorldStatesFromPage();
@@ -17628,6 +17642,19 @@ $(function () {
         $(e.currentTarget).closest(".accordion-item").remove();
     });
 });
+function addNewActionset(includeEmptyAction = true) {
+    let newActionSet = new ActionSet();
+    let numNewActionsetsAlready = actionSets.filter(actionset => actionset.name.startsWith("New-Actionset")).length;
+    newActionSet.name = "New-Actionset" + numNewActionsetsAlready;
+    newActionSet.actions = [];
+    if (includeEmptyAction) {
+        newActionSet.actions = [
+            new new_astar_1.NodeAction()
+        ];
+    }
+    actionSets.push(newActionSet);
+    renderActionsets(actionSets);
+}
 function implementPlanWithAction(actionset) {
     //The goal & actions can be in these states: 
     //1. plan has completed successfully. (runSearch)
@@ -17691,7 +17718,7 @@ function updateDataFromPage() {
         }
         //let actions = currentActionset.actions;
         currentActionset.actions = [];
-        let $actionList = $(`#actions-${currentActionset.name}-accordion`);
+        let $actionList = $(actionsetContainer).find(`.action-list`);
         $actionList.children()
             .filter((index, child) => $(child).find(".form-check-input").is(":checked"))
             .each((index, element) => {
@@ -17718,9 +17745,19 @@ function updateWorldStatesFromPage() {
     currentWorldState = $.extend(currentWorldState, intitialWorldStateEditor.get());
     goalStateJSON = goalWorldStateEditor.get();
 }
+function renderWorldStatesOnPage() {
+    intitialWorldStateEditor.set(currentWorldState);
+    goalWorldStateEditor.set(goalStateJSON);
+}
 function getCurrentActionset() {
     let actionsetName = $($("#actionset-names-dropdown .active")[0]).text();
-    return actionSets.filter((actionset => actionset.name == actionsetName))[0];
+    const visibleActionsets = actionSets.filter((actionset => actionset.name == actionsetName));
+    if (visibleActionsets.length > 0) {
+        return visibleActionsets[0];
+    }
+    else {
+        return undefined;
+    }
 }
 function saveDataToStorage(initialStateJSON, goalStateJSON, actionSets) {
     window.localStorage.setItem("initialStateJSON", JSON.stringify(initialStateJSON));
@@ -17739,16 +17776,19 @@ function loadDataFromStorage() {
     }
     const storageActionsets = window.localStorage.getItem("actionsets");
     if (storageActionsets != null && storageActionsets.length > 0) {
-        actionSets = JSON.parse(storageActionsets).map(actionsetJSON => {
-            let actionset = actionsetJSON;
-            actionset.actions = actionset.actions.map(actionJSON => {
-                let action = $.extend(new new_astar_1.NodeAction(), actionJSON);
-                action.preconditions = $.extend(new new_astar_1.WorldState(), actionJSON.preconditions);
-                action.effects = $.extend(new new_astar_1.WorldState(), actionJSON.effects);
-                return action;
+        const storageActionsetsJSON = JSON.parse(storageActionsets);
+        if (storageActionsetsJSON) {
+            actionSets = storageActionsetsJSON.map(actionsetJSON => {
+                let actionset = actionsetJSON;
+                actionset.actions = actionset.actions.map(actionJSON => {
+                    let action = $.extend(new new_astar_1.NodeAction(), actionJSON);
+                    action.preconditions = $.extend(new new_astar_1.WorldState(), actionJSON.preconditions);
+                    action.effects = $.extend(new new_astar_1.WorldState(), actionJSON.effects);
+                    return action;
+                });
+                return actionset;
             });
-            return actionset;
-        });
+        }
     }
 }
 function loadDataFromQuerystring() {

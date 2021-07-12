@@ -132,6 +132,13 @@ $(function() {
         updateDataFromPage();
         saveDataToQuerystring();
     });
+    $("#reset").click((e)=>{
+        e.preventDefault();
+        saveDataToStorage({}, {}, []);
+        loadDataFromStorage();
+        renderActionsets(actionSets);
+        renderWorldStatesOnPage();
+    });
     $(".run-search").click(()=>{
         updateDataFromPage();
         const currentActionset = getCurrentActionset();
@@ -140,22 +147,29 @@ $(function() {
         actionSets.forEach(actionset=>runSearch(actionset));
     });
     $("#addAction").click(()=>{
-        const currentActionset = getCurrentActionset();
-        let $actionList = $(`#actions-${currentActionset.name}-accordion`);
+        let currentActionset = getCurrentActionset();
+        if(!currentActionset){
+            let $firstActionsetButton = $("#actionset-names-dropdown .dropdown-item:first");
+            if($firstActionsetButton.length == 0){
+                addNewActionset(false);
+                $firstActionsetButton = $("#actionset-names-dropdown .dropdown-item:first");
+            }
+            $firstActionsetButton.addClass("active");
+            $(".actionset-container:first").addClass("active show");
+            currentActionset = getCurrentActionset();
+        }
+        let $actionList = $('.actionset-container.active .action-list');
         addEmptyAction($actionList, currentActionset.name); 
     });
 
     $("#addActionList").click(()=>{
         updateDataFromPage();
 
-        let newActionSet = new ActionSet();
-        newActionSet.name = "New-Actionset";
-        newActionSet.actions = [
-            new NodeAction()
-        ];
-        actionSets.push(newActionSet);
+        addNewActionset();
 
-        renderActionsets(actionSets);
+        let $newActionsetButton = $("#actionset-names-dropdown .dropdown-item:last");
+        $newActionsetButton.addClass("active");
+        $(".actionset-container:last").addClass("active show");
     });
 
     $("#nextStep").click(()=>{
@@ -178,6 +192,20 @@ $(function() {
         $(e.currentTarget).closest(".accordion-item").remove();
     });
 });
+
+function addNewActionset(includeEmptyAction:boolean = true) {
+    let newActionSet = new ActionSet();
+    let numNewActionsetsAlready = actionSets.filter(actionset=>actionset.name.startsWith("New-Actionset")).length
+    newActionSet.name = "New-Actionset"+numNewActionsetsAlready + 1;
+    newActionSet.actions = [];
+    if(includeEmptyAction){
+        newActionSet.actions = [
+            new NodeAction()
+        ];
+    }
+    actionSets.push(newActionSet);
+    renderActionsets(actionSets);
+}
 
 function implementPlanWithAction(actionset:ActionSet){
     
@@ -255,7 +283,7 @@ function updateDataFromPage(){
         }
         //let actions = currentActionset.actions;
         currentActionset.actions = [];
-        let $actionList = $(`#actions-${currentActionset.name}-accordion`);
+        let $actionList = $(actionsetContainer).find(`.action-list`);
         $actionList.children()
         .filter((index,child) => $(child).find(".form-check-input").is(":checked"))
         .each((index:number, element:HTMLElement) => {
@@ -293,10 +321,20 @@ function updateWorldStatesFromPage() {
     goalStateJSON = goalWorldStateEditor.get();
 }
 
+function renderWorldStatesOnPage(){
+    intitialWorldStateEditor.set(currentWorldState);
+    goalWorldStateEditor.set(goalStateJSON);
+}
+
 function getCurrentActionset():ActionSet
 {
     let actionsetName:string = $($("#actionset-names-dropdown .active")[0]).text();
-    return actionSets.filter((actionset => actionset.name == actionsetName))[0];
+    const visibleActionsets = actionSets.filter((actionset => actionset.name == actionsetName));
+    if(visibleActionsets.length > 0){
+        return visibleActionsets[0];
+    }else{
+        return undefined;
+    }
 }
 
 function saveDataToStorage(initialStateJSON, goalStateJSON, actionSets:ActionSet[])
@@ -320,16 +358,20 @@ function loadDataFromStorage(){
     
     const storageActionsets = window.localStorage.getItem("actionsets");
     if(storageActionsets != null &&  storageActionsets.length > 0){
-        actionSets = JSON.parse(storageActionsets).map(actionsetJSON => {
-            let actionset:ActionSet = actionsetJSON;
-            actionset.actions = actionset.actions.map(actionJSON => {
-                let action:NodeAction = $.extend(new NodeAction(), actionJSON);
-                action.preconditions = $.extend(new WorldState(), actionJSON.preconditions);
-                action.effects = $.extend(new WorldState(), actionJSON.effects);
-                return action;
+        const storageActionsetsJSON:Array<any> = JSON.parse(storageActionsets);
+        if(storageActionsetsJSON){
+            actionSets = storageActionsetsJSON.map(actionsetJSON => {
+                let actionset:ActionSet = actionsetJSON;
+                actionset.actions = actionset.actions.map(actionJSON => {
+                    let action:NodeAction = $.extend(new NodeAction(), actionJSON);
+                    action.preconditions = $.extend(new WorldState(), actionJSON.preconditions);
+                    action.effects = $.extend(new WorldState(), actionJSON.effects);
+                    return action;
+                });
+                return actionset;
             });
-            return actionset;
-        });
+        }
+        
     }
 }
 
