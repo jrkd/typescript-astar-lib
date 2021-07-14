@@ -17550,11 +17550,36 @@ const goalOptions = {
 };
 //var actions: NodeAction[];
 class ActionSet {
-    constructor() {
-        this.currentActionPlan = [];
-    }
 }
 ;
+class ActionSetPlan {
+    constructor() {
+        this.currentActionPlan = [];
+        // checkPlanIsValidFromCurrentState(currentWorld:WorldState, goalWorld:WorldState):boolean{
+        //     let isValid:boolean = true;
+        //     return isValid;
+        // }
+    }
+    isSuccessful(currentWorldState) {
+        return this.currentGoal && this.currentGoal.containedWithin(currentWorldState);
+    }
+    isValid(currentWorldState) {
+        return this.currentGoal
+            && !this.isSuccessful(currentWorldState)
+            && this.currentActionPlan.length > 0
+            && this.currentActionPlan[0].action.preconditions.containedWithin(currentWorldState);
+        //&& this.checkPlanIsValidFromCurrentState(currentWorldState, this.currentGoal);
+    }
+    executeNextStep(currentWorldState) {
+        let updatedWorldState = this.currentActionPlan[0].action.effects.applyTo(currentWorldState);
+        //
+        // TODO: this is where you would run custom JS and not neccesarrily slice the array immediately.
+        //
+        this.currentActionPlan = this.currentActionPlan.slice(1);
+        return updatedWorldState;
+    }
+}
+let currentPlans = new Map();
 let actionSets = [];
 let intitialWorldStateEditor, goalWorldStateEditor;
 let goalStateJSON = {
@@ -17673,47 +17698,25 @@ function addNewActionset(includeEmptyAction = true) {
 // log that its invalid, re-run, re-log? could be valid now? could have no goals
 //feels like i should be doing the single re-run first, regardless. 
 function implementPlanWithAction(actionset) {
-    //The goal & actions can be in these states: 
-    //1. plan has completed successfully. (runSearch)
-    //2. no plans and actions exist.  (runSearch)
-    //3. plan does exist, but now its invalid. (runSearch)
-    //4. plan is in progress
-    //
-    let goalAndActionsExist = actionset.currentGoal && (actionset.currentActionPlan !== undefined && actionset.currentActionPlan !== null);
-    let planWasSuccessful = actionset.currentGoal && actionset.currentGoal.containedWithin(currentWorldState);
-    let planIsValid = goalAndActionsExist
-        && !planWasSuccessful
-        && actionset.currentActionPlan.length > 0
-        && actionset.currentActionPlan[0].action.preconditions.containedWithin(currentWorldState) //check action's preconditions are still met. 
-        && checkPlanIsValidFromCurrentState(currentWorldState, actionset.currentGoal, actionset.currentActionPlan);
-    // and from the current world state, can we still get to the goal by applying the whole list of actions?
-    if (!goalAndActionsExist || !planIsValid || planWasSuccessful) {
-        //run a new search.
-        actionset.currentGoalName = "";
-        actionset.currentActionPlan = [];
-        actionset.currentGoal = null;
-        runSearch(actionset);
-        goalAndActionsExist = actionset.currentGoal && (actionset.currentActionPlan !== undefined && actionset.currentActionPlan !== null);
-        planWasSuccessful = actionset.currentGoal && actionset.currentGoal.containedWithin(currentWorldState);
-        planIsValid = goalAndActionsExist
-            && !planWasSuccessful
-            && actionset.currentActionPlan.length > 0
-            && actionset.currentActionPlan[0].action.preconditions.containedWithin(currentWorldState) //check action's preconditions are still met. 
-            && checkPlanIsValidFromCurrentState(currentWorldState, actionset.currentGoal, actionset.currentActionPlan);
-        if (!goalAndActionsExist) {
+    let plan = currentPlans.get(actionset.name);
+    if (!plan || !plan.isValid(currentWorldState) || plan.isSuccessful(currentWorldState)) {
+        // This plan is no good. Look for a new one.
+        if (!!plan && plan.isSuccessful(currentWorldState)) {
+            logNewActivity("#activity-log-complete-goal-template", "", plan.currentGoalName, actionset.name);
+        }
+        currentPlans.delete(actionset.name);
+        let newPlan = runSearch(actionset);
+        if (newPlan) {
+            currentPlans.set(actionset.name, newPlan);
+        }
+        if (!newPlan) {
             logNewActivity("#activity-log-no-goals-template", "", "", actionset.name);
         }
-        else if (planWasSuccessful) {
-            logNewActivity("#activity-log-complete-goal-template", "", actionset.currentGoalName, actionset.name);
-        }
     }
-    if (planIsValid) {
-        logNewActivity("#activity-log-use-action-template", actionset.currentActionPlan[0].action.name, actionset.currentGoalName, actionset.name);
-        currentWorldState = actionset.currentActionPlan[0].action.effects.applyTo(currentWorldState);
-        actionset.currentActionPlan = actionset.currentActionPlan.slice(1); //remove current action from front of action plan.
-    }
-    else if (goalAndActionsExist) {
-        logNewActivity("#activity-log-invalid-goal-template", "", actionset.currentGoalName, actionset.name);
+    plan = currentPlans.get(actionset.name); // Current plan might have changed.
+    if (plan && plan.isValid(currentWorldState)) {
+        logNewActivity("#activity-log-use-action-template", plan.currentActionPlan[0].action.name, plan.currentGoalName, actionset.name);
+        currentWorldState = plan.executeNextStep(currentWorldState);
     }
 }
 function checkPlanIsValidFromCurrentState(currentWorld, goalWorld, actionPlan) {
@@ -17731,7 +17734,6 @@ function logNewActivity(activityLogItemTemplateSelector, actionName, goalName, a
 function updateDataFromPage() {
     //set initial and goal state based on current 
     updateWorldStatesFromPage();
-    actionSets = [];
     $(".actionset-container").each((index, actionsetContainer) => {
         const actionsetName = $(actionsetContainer).find(".actionset-name").val().toString();
         let currentActionset = actionSets.filter(actionset => actionset.name === actionsetName)[0];
@@ -17873,6 +17875,7 @@ function saveDataToQuerystring() {
         + "&actionsets=" + encodeURIComponent(JSON.stringify(actionSets));
 }
 function runSearch(actionset) {
+    let resultPlan = undefined;
     var $plannerResults = $("#plannerList");
     $plannerResults.empty();
     var planner = new new_astar_1.Planner();
@@ -17890,30 +17893,22 @@ function runSearch(actionset) {
         let goalJSON = goalStateJSON[goalName];
         let goalState = new new_astar_1.WorldState();
         $.extend(goalState, goalJSON);
-        actionset.currentGoal = null;
-        actionset.currentGoalName = "";
-        actionset.currentActionPlan = [];
         let goalResults = runSearchForGoal(actionset.actions, startState, goalState);
         if (goalResults.length > 0) {
             results = goalResults;
             metGoalName = goalName;
-            actionset.currentGoal = goalState;
-            actionset.currentActionPlan = goalResults;
-            actionset.currentGoalName = goalName;
+            resultPlan = new ActionSetPlan();
+            resultPlan.currentGoal = goalState;
+            resultPlan.currentActionPlan = goalResults;
+            resultPlan.currentGoalName = goalName;
             break;
         }
         else {
             unmetGoals.push(goalName);
         }
     }
-    //$(".no-results-container:last").append("<h5>Using <mark>"+actionset.name+"'s</mark> actions</h5>");
-    // unmetGoals.forEach(goalName => {
-    //     $(".no-results-container:last").append("<p>Unable to meet <mark>"+goalName + "</mark> goal"+"</p>");
-    // });
-    // if(metGoalName.length > 0){
-    //     $(".no-results-container:last").append("<p>Plan to get to goal with <mark>" +metGoalName + "</mark>"+"</p>");
-    // }
     renderPlan(startNode, results, actionset, unmetGoals, metGoalName);
+    return resultPlan;
 }
 function runSearchForGoal(_actions, startState, goalState) {
     var planner = new new_astar_1.Planner();

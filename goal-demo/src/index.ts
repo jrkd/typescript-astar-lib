@@ -26,20 +26,6 @@ let jsonFormatterOptions = {
     useToJSON: true
 };
 
-let initialStateJSONx = {
-    "hungry": true,
-    "moneyWithMe": 0,
-    "numFoodRecipes": 0,
-    "moneyAtBank": 5,
-    "bankPosX": 5,
-    "bankPosY": 5,
-    "numBread": 0,
-    "numCheese": 0,
-    "myPosX": 0,
-    "myPosY": 0
-};
-
-
 let currentWorldState: WorldState = new WorldState();
 currentWorldState = $.extend(currentWorldState, {
     "hungry": true,
@@ -75,15 +61,46 @@ const goalOptions = {
     "limitDragging": true
   };
 
-//var actions: NodeAction[];
 class ActionSet {
     name:string;
     actions:NodeAction[];
     disabledActions:NodeAction[];
+};
+
+class ActionSetPlan{
     currentGoal:WorldState;
     currentGoalName:string;
     currentActionPlan:GoalEdge[] = [];
-};
+
+    isSuccessful(currentWorldState:WorldState):boolean{
+        return this.currentGoal && this.currentGoal.containedWithin(currentWorldState);
+    }
+
+    isValid(currentWorldState:WorldState){
+        return this.currentGoal 
+        && !this.isSuccessful(currentWorldState)
+        && this.currentActionPlan.length > 0 
+        && this.currentActionPlan[0].action.preconditions.containedWithin(currentWorldState);
+        //&& this.checkPlanIsValidFromCurrentState(currentWorldState, this.currentGoal);
+    }
+
+    executeNextStep(currentWorldState:WorldState):WorldState{
+        let updatedWorldState = this.currentActionPlan[0].action.effects.applyTo(currentWorldState);
+        //
+        // NOTE!: this is where you would run custom JS and not neccesarrily slice the array immediately.
+        //
+        this.currentActionPlan = this.currentActionPlan.slice(1);
+        return updatedWorldState;
+    }
+
+    // checkPlanIsValidFromCurrentState(currentWorld:WorldState, goalWorld:WorldState):boolean{
+    //     let isValid:boolean = true;
+    //     return isValid;
+    // }
+}
+
+let currentPlans:Map<string, ActionSetPlan> = new Map<string, ActionSetPlan>();
+
 let actionSets:ActionSet[] = [];
 let intitialWorldStateEditor, goalWorldStateEditor;
 
@@ -109,9 +126,6 @@ $(function() {
     {
         loadDataFromStorage();
     }
-    
-
-    
 
     intitialWorldStateEditor = new JSONEditor($(".initial-world-state")[0], $.extend(editableOptions,{"name":"Initial world state"}));
     intitialWorldStateEditor.set(currentWorldState);
@@ -121,12 +135,6 @@ $(function() {
     // $(".initial-world-state").append(new JSONFormatter(initialStateJSON, 1, jsonFormatterOptions).render());
     // $(".goal-world-state").append(new JSONFormatter(goalStateJSON, 1, jsonFormatterOptions).render());
 
-    //setup the actions we can use. 
-    //planner.nodes -- we dont really have a full list of them right? cause each action just tweaks them?...
-    //suppose you could make things quick by pre-processing?
-    //actions:
-    //actions = setupActions();
-    //renderActions(actions);
     renderActionsets(actionSets);
 
     $("#saveCurrent").click((e)=>{
@@ -217,75 +225,33 @@ function addNewActionset(includeEmptyAction:boolean = true) {
     renderActionsets(actionSets);
 }
 
-    //If there isnt a goal
-    //re-run and re-check before logging 
-
-    //if there is a goal, and we've reached it, 
-    //log then re-run for new stuff.
-
-    //if theres a goal, and its still valid, process and log
-
-    //if theres a goal, and the plans now invalid,
-    // log that its invalid, re-run, re-log? could be valid now? could have no goals
-
-    //feels like i should be doing the single re-run first, regardless. 
 function implementPlanWithAction(actionset:ActionSet){
-    
-    //The goal & actions can be in these states: 
-    //1. plan has completed successfully. (runSearch)
-    //2. no plans and actions exist.  (runSearch)
-    //3. plan does exist, but now its invalid. (runSearch)
-    //4. plan is in progress
-    //
-    let goalAndActionsExist:boolean = actionset.currentGoal && (actionset.currentActionPlan !== undefined && actionset.currentActionPlan !== null);
-    let planWasSuccessful = actionset.currentGoal && actionset.currentGoal.containedWithin(currentWorldState);
-    let planIsValid = goalAndActionsExist 
-                        && !planWasSuccessful
-                        && actionset.currentActionPlan.length > 0 
-                        && actionset.currentActionPlan[0].action.preconditions.containedWithin(currentWorldState) //check action's preconditions are still met. 
-                        && checkPlanIsValidFromCurrentState(currentWorldState, actionset.currentGoal, actionset.currentActionPlan);
-                        // and from the current world state, can we still get to the goal by applying the whole list of actions?
+    let plan:ActionSetPlan = currentPlans.get(actionset.name);
+    if(!plan || !plan.isValid(currentWorldState) || plan.isSuccessful(currentWorldState) )
+    {
+        // This plan is no good. Look for a new one.
+        if(!!plan && plan.isSuccessful(currentWorldState)){
+            logNewActivity("#activity-log-complete-goal-template", "", plan.currentGoalName, actionset.name);
+        }
 
-    if(!goalAndActionsExist || !planIsValid || planWasSuccessful){
-        //run a new search.
-        actionset.currentGoalName = "";
-        actionset.currentActionPlan = [];
-        actionset.currentGoal = null;
-        runSearch(actionset);
+        currentPlans.delete(actionset.name);
+        let newPlan = runSearch(actionset);
+        if(newPlan){
+            currentPlans.set(actionset.name, newPlan);
 
-        goalAndActionsExist = actionset.currentGoal && (actionset.currentActionPlan !== undefined && actionset.currentActionPlan !== null);
-        planWasSuccessful = actionset.currentGoal && actionset.currentGoal.containedWithin(currentWorldState);
-        planIsValid = goalAndActionsExist 
-                        && !planWasSuccessful
-                        && actionset.currentActionPlan.length > 0 
-                        && actionset.currentActionPlan[0].action.preconditions.containedWithin(currentWorldState) //check action's preconditions are still met. 
-                        && checkPlanIsValidFromCurrentState(currentWorldState, actionset.currentGoal, actionset.currentActionPlan)
+        }
 
-        if(!goalAndActionsExist) {
+        if(!newPlan) {
             logNewActivity("#activity-log-no-goals-template", "", "", actionset.name);
         }
-        else if(planWasSuccessful){
-            logNewActivity("#activity-log-complete-goal-template", "", actionset.currentGoalName, actionset.name);
-        }
-    }
+    } 
 
-
-    if( planIsValid )
+    plan = currentPlans.get(actionset.name); // Current plan might have changed.
+    if( plan && plan.isValid(currentWorldState) )
     {
-        logNewActivity("#activity-log-use-action-template", actionset.currentActionPlan[0].action.name, actionset.currentGoalName, actionset.name);
-        currentWorldState = actionset.currentActionPlan[0].action.effects.applyTo(currentWorldState);
-        actionset.currentActionPlan = actionset.currentActionPlan.slice(1);//remove current action from front of action plan.
-    } else if(goalAndActionsExist) {
-        logNewActivity("#activity-log-invalid-goal-template", "", actionset.currentGoalName, actionset.name);
+        logNewActivity("#activity-log-use-action-template", plan.currentActionPlan[0].action.name, plan.currentGoalName, actionset.name);
+        currentWorldState = plan.executeNextStep(currentWorldState);
     }
-
-    
-}
-
-function checkPlanIsValidFromCurrentState(currentWorld:WorldState, goalWorld:WorldState, actionPlan:GoalEdge[]):boolean{
-    let isValid:boolean = true;
-
-    return isValid;
 }
 
 function logNewActivity(activityLogItemTemplateSelector:string, actionName:string, goalName:string, agentName:string){
@@ -298,14 +264,11 @@ function logNewActivity(activityLogItemTemplateSelector:string, actionName:strin
     $(".activity-log").append(activtyHTML);
 }
 
-
 function updateDataFromPage(){
     //set initial and goal state based on current 
     updateWorldStatesFromPage();
 
-    actionSets = [];
     $(".actionset-container").each( (index, actionsetContainer) =>{
-
         const actionsetName:string = $(actionsetContainer).find(".actionset-name").val().toString();
         let currentActionset:ActionSet = actionSets.filter(actionset=>actionset.name === actionsetName)[0];
         if(currentActionset == null){
@@ -340,16 +303,8 @@ function updateDataFromPage(){
                 currentActionset.disabledActions.push(newAction);
             }           
         });
-    
-        //let $actionsetNameInput = $(`#actionset-${currentActionset.name}-name`);
-        //currentActionset.name = $actionsetNameInput.val().toString();
-    
     });
-
-  
-
     saveDataToStorage(currentWorldState, goalStateJSON, actionSets);
-
     renderActionsets(actionSets);
 }
 
@@ -420,7 +375,6 @@ function loadDataFromStorage(){
                 return actionset;
             });
         }
-        
     }
 }
 
@@ -471,25 +425,21 @@ function saveDataToQuerystring(){
                                                             + "&actionsets=" + encodeURIComponent(JSON.stringify(actionSets));
 }
 
-function runSearch(actionset:ActionSet) {
-
+function runSearch(actionset:ActionSet):ActionSetPlan {
+    let resultPlan:ActionSetPlan = undefined;
     var $plannerResults = $("#plannerList");
     $plannerResults.empty();
     var planner = new Planner();
-
     planner.actions = actionset.actions;
 
     //setup current state
     let startState: WorldState = currentWorldState;
-
     let startNode: GoalNode = new GoalNode();
     startNode.state = startState;
 
     let results = [];//AStar.search(planner, startNode, goalNode, {});
 
     const goalNames = Object.keys(goalStateJSON);
-    
-
     let unmetGoals = [];
     let metGoalName = "";
     for(let index = 0; index < goalNames.length; ++index)
@@ -499,31 +449,21 @@ function runSearch(actionset:ActionSet) {
         let goalState: WorldState = new WorldState();
         $.extend(goalState, goalJSON);
 
-        actionset.currentGoal = null;
-        actionset.currentGoalName = "";
-        actionset.currentActionPlan = [];
         let goalResults = runSearchForGoal(actionset.actions, startState, goalState);
         if(goalResults.length > 0){
             results = goalResults;
             metGoalName = goalName;
-            actionset.currentGoal = goalState;
-            actionset.currentActionPlan = goalResults as GoalEdge[];
-            actionset.currentGoalName = goalName;
+            resultPlan = new ActionSetPlan();
+            resultPlan.currentGoal = goalState;
+            resultPlan.currentActionPlan = goalResults as GoalEdge[];
+            resultPlan.currentGoalName = goalName;
             break;
         } else{
             unmetGoals.push(goalName);
         }
     }
-
-    //$(".no-results-container:last").append("<h5>Using <mark>"+actionset.name+"'s</mark> actions</h5>");
-    // unmetGoals.forEach(goalName => {
-    //     $(".no-results-container:last").append("<p>Unable to meet <mark>"+goalName + "</mark> goal"+"</p>");
-    // });
-
-    // if(metGoalName.length > 0){
-    //     $(".no-results-container:last").append("<p>Plan to get to goal with <mark>" +metGoalName + "</mark>"+"</p>");
-    // }
     renderPlan(startNode, results, actionset, unmetGoals, metGoalName);
+    return resultPlan;
 }
 
 function runSearchForGoal(_actions:NodeAction[],startState: WorldState, goalState:WorldState):IGraphEdge[] {
@@ -541,90 +481,6 @@ function runSearchForGoal(_actions:NodeAction[],startState: WorldState, goalStat
     let results = AStar.search(planner, startNode, goalNode, {});
 
     return results;
-}
-
-function getDefaultActions():NodeAction[] {
-    let moveToBank: NodeAction = new NodeAction();
-    moveToBank.name = "Move to bank";
-    moveToBank.cost = 1;
-    moveToBank.preconditions = new WorldState();
-    moveToBank.effects = new WorldState();
-    moveToBank.effects.myPosX = 5;
-    moveToBank.effects.myPosY = 5;
-
-    let takeMoneyFromBank: NodeAction = new NodeAction();
-    takeMoneyFromBank.name = "Take money from bank";
-    takeMoneyFromBank.cost = 1;
-    takeMoneyFromBank.preconditions = new WorldState();
-    takeMoneyFromBank.preconditions.myPosX = 5;
-    takeMoneyFromBank.preconditions.myPosY = 5;
-    takeMoneyFromBank.preconditions.moneyAtBank = 5;
-    takeMoneyFromBank.effects = new WorldState();
-    takeMoneyFromBank.effects.moneyWithMe = 5;
-    takeMoneyFromBank.effects.moneyAtBank = 0;
-
-    let workAJob: NodeAction = new NodeAction();
-    workAJob.name = "Another day, another dolla (Work)";
-    workAJob.cost = 1;
-    workAJob.preconditions = new WorldState();
-    workAJob.effects = new WorldState();
-    workAJob.effects.moneyAtBank = 5;
-    
-
-    let buyPizza: NodeAction = new NodeAction();
-    buyPizza.name = "Eat pizza";
-    buyPizza.cost = 1;
-    buyPizza.preconditions = new WorldState();
-    buyPizza.preconditions.hungry = true;
-    buyPizza.preconditions.moneyWithMe = 5;
-    buyPizza.effects = new WorldState();
-    buyPizza.effects.moneyWithMe = 0;
-    buyPizza.effects.hungry = false;
-    buyPizza.effects.isRelaxed = true;
-
-    let learnToMakeBestToastie: NodeAction = new NodeAction();
-    learnToMakeBestToastie.name = "Have a revelation - i know how to make the worlds best toastie";
-    learnToMakeBestToastie.cost = 1;
-    learnToMakeBestToastie.preconditions = new WorldState();
-    learnToMakeBestToastie.preconditions.isRelaxed = true;
-    learnToMakeBestToastie.effects = new WorldState();
-    learnToMakeBestToastie.effects.numFoodRecipes = 1;
-
-    let makeToastie: NodeAction = new NodeAction();
-    makeToastie.name = "Make Toastie";
-    makeToastie.cost = 1;
-    makeToastie.preconditions = new WorldState();
-    makeToastie.preconditions.numFoodRecipes = 1;
-    makeToastie.preconditions.numCheese = 1;
-    makeToastie.preconditions.numBread = 2;
-    makeToastie.effects = new WorldState();
-    makeToastie.effects.hungry = false;
-    makeToastie.effects.numToastie = 1;
-    makeToastie.effects.numCheese = -1;
-    makeToastie.effects.numBread = -1;
-
-    let serveCustomers: NodeAction = new NodeAction();
-    serveCustomers.name = "Serve customers";
-    serveCustomers.cost = 1;
-    serveCustomers.preconditions = new WorldState();
-    serveCustomers.preconditions.numToastie = 6;
-    serveCustomers.effects = new WorldState();
-    serveCustomers.effects.customersServed = true;
-
-    let getSliceOfBread: NodeAction = new NodeAction();
-    getSliceOfBread.name = "Get Slice of Bread";
-    getSliceOfBread.cost = 1;
-    getSliceOfBread.preconditions = new WorldState();
-    getSliceOfBread.effects = new WorldState();
-    getSliceOfBread.effects.numBread = 1;
-
-    let getCheese: NodeAction = new NodeAction();
-    getCheese.name = "Get cheese";
-    getCheese.cost = 1;
-    getCheese.preconditions = new WorldState();
-    getCheese.effects = new WorldState();
-    getCheese.effects.numCheese = 1;
-    return [ workAJob, moveToBank, getSliceOfBread, getCheese, buyPizza, learnToMakeBestToastie , serveCustomers, takeMoneyFromBank, makeToastie ];
 }
 
 function renderActionsets(actionsets:ActionSet[])
@@ -656,13 +512,6 @@ function renderActionsets(actionsets:ActionSet[])
         let $actionList = $(`#actions-${actionset.name}-accordion`);
 
         renderActions(actionset.name, $actionList, actionset.actions, actionset.disabledActions);
-
-        if(index == 0){
-            // $($actionsetTabContainer.find("li a.dropdown-item")).addClass("active");
-            // $($actionsetTabContainer.find("li a.dropdown-item")).attr("aria-selected", "true");
-            // $($actionsetTabContentContainer.children()[0]).addClass("show active");
-            // $($actionsetTabContentContainer.children()[0]).attr("aria-selected", "true");
-        }
     });
 }
 
@@ -679,7 +528,6 @@ function renderActions(actionsetName:string, $actionList, actions:NodeAction[], 
 }
 
 function addActionToHTML(actionsetName:string, $actionList, name = "[New action]", cost = 1, preconditionsJSON = {}, effectsJSON = {}, enabled = true) { 
-    //const $actionList = $(".action-list");
     let actionHtml = $(".action-item-template").html();
     actionHtml = actionHtml.split("{{index}}").join($actionList.children().length.toString());
     actionHtml = actionHtml.split("{{name}}").join(name);
